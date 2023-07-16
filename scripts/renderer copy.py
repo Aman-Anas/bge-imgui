@@ -70,41 +70,23 @@ class BGEImguiRenderer(BaseOpenGLRenderer):
 
     def refresh_font_texture(self):
         # save texture state
-        buf = Buffer(GL_INT, 1)
-        glGetIntegerv(GL_TEXTURE_BINDING_2D)
-        last_texture = buf[0]
-
         width, height, pixels = self.io.fonts.get_tex_data_as_rgba32()
 
-        if self._font_texture is not None:
-            glDeleteTextures([self._font_texture])
-
-        glGenTextures(1)
-        self._font_texture = buf[0]
-
-        glBindTexture(GL_TEXTURE_2D, self._font_texture)
-        glTexParameteri(
-            GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(
-            GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-
-        pixel_buffer = Buffer(GL_BYTE, [4 * width * height])
-        pixel_buffer[:] = pixels
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width,
-                     height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel_buffer)
+        #glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width,
+        #             height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel_buffer)
 
         self.io.fonts.texture_id = self._font_texture
-        glBindTexture(GL_TEXTURE_2D, last_texture)
+        
         self.io.fonts.clear_tex_data()
 
     def _create_device_objects(self):
         filterManager = self.scene.filterManager
         self.shader = filterManager.addFilter(
-            0, bge.logic.RAS_2DFILTER_CUSTOMFILTER, "")
+            0, bge.logic.RAS_2DFILTER_CUSTOMFILTER, FRAGMENT_SHADER)
 
         self.shader.enabled = True
 
-        self.shader.setSource(VERTEX_SHADER, FRAGMENT_SHADER, True)
+        # self.shader.setSource(VERTEX_SHADER, FRAGMENT_SHADER, True)
 
         # self.shader.validate()  # may not be necessary
 
