@@ -5,46 +5,14 @@ from bge.types import KX_Scene
 import imgui
 import ctypes
 import bge.logic
-from .renderShaders import VERTEX_SHADER, FRAGMENT_SHADER
 import numpy as np
 import imgui
 import ctypes
 from OpenGL import GL as pyOpenGL
 
 
-class ProgrammablePipelineRenderer(BaseOpenGLRenderer):
+class BGEPipelineRenderer(BaseOpenGLRenderer):
     """Basic OpenGL integration base class."""
-
-    VERTEX_SHADER_SRC = """
-    #version 330
-
-    uniform mat4 ProjMtx;
-    in vec2 Position;
-    in vec2 UV;
-    in vec4 Color;
-    out vec2 Frag_UV;
-    out vec4 Frag_Color;
-
-    void main() {
-        Frag_UV = UV;
-        Frag_Color = Color;
-
-        gl_Position = ProjMtx * vec4(Position.xy, 0, 1);
-    }
-    """
-
-    FRAGMENT_SHADER_SRC = """
-    #version 330
-
-    uniform sampler2D Texture;
-    in vec2 Frag_UV;
-    in vec4 Frag_Color;
-    out vec4 Out_Color;
-
-    void main() {
-        Out_Color = Frag_Color * texture(Texture, Frag_UV.st);
-    }
-    """
 
     def __init__(self, scene: KX_Scene):
         self._shader_handle = None
@@ -63,7 +31,7 @@ class ProgrammablePipelineRenderer(BaseOpenGLRenderer):
         self._vao_handle = None
         self.data = None
 
-        super(ProgrammablePipelineRenderer, self).__init__()
+        super(BGEPipelineRenderer, self).__init__()
         self.scene.post_draw.append(self.saveLoadGLState)
 
     def refresh_font_texture(self):
@@ -373,7 +341,7 @@ class ProgrammablePipelineRenderer(BaseOpenGLRenderer):
         return values
 
 
-class BGEImguiRenderer(ProgrammablePipelineRenderer):
+class BGEImguiRenderer(BGEPipelineRenderer):
     def __init__(self, scene):
         self.scene = scene
         super().__init__(scene)
