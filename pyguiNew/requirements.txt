@@ -1,3 +1,0 @@
-glfw
-Pillow
-PyOpenGL
