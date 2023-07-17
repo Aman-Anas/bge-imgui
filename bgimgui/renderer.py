@@ -1,11 +1,8 @@
-#from .gl_utils import *
-import bgl
 from imgui.integrations.base import BaseOpenGLRenderer
 from bge.types import KX_Scene
 import imgui
 import ctypes
 import bge.logic
-import numpy as np
 import imgui
 import ctypes
 from OpenGL import GL as gl
