@@ -6,6 +6,9 @@ import bge.logic
 import imgui
 import ctypes
 from OpenGL import GL as gl
+import bgl
+import time
+import sys
 
 
 class BGEPipelineRenderer(BaseOpenGLRenderer):
@@ -272,8 +275,10 @@ BGE_KEY_EVENT_MAP = {
     bge.events.PAGEDOWNKEY: imgui.KEY_PAGE_DOWN,
     bge.events.HOMEKEY: imgui.KEY_HOME,
     bge.events.ENDKEY: imgui.KEY_END,
+    bge.events.INSERTKEY: imgui.KEY_INSERT,
     bge.events.DELKEY: imgui.KEY_DELETE,
     bge.events.BACKSPACEKEY: imgui.KEY_BACKSPACE,
+    bge.events.SPACEKEY: imgui.KEY_SPACE,
     bge.events.ENTERKEY: imgui.KEY_ENTER,
     bge.events.ESCKEY: imgui.KEY_ESCAPE,
     bge.events.AKEY: imgui.KEY_A,
@@ -295,6 +300,9 @@ class BGEImguiRenderer(BGEPipelineRenderer):
 
         self.mouse = bge.logic.mouse
         self.keyboard = bge.logic.keyboard
+        self.cursorRenderer = CursorRenderer(scene)
+        self.cursorRenderer.addCursor()
+
         self._map_keys()
 
     def _map_keys(self):
@@ -302,7 +310,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         for bgeKey, imguiKey in BGE_KEY_EVENT_MAP.items():
             key_map[imguiKey] = bgeKey
 
-    def updateScreenSize(self):
+    def updateScreenSize(self, io):
         width = bge.render.getWindowWidth()
         height = bge.render.getWindowHeight()
         refreshSize = True
@@ -317,8 +325,8 @@ class BGEImguiRenderer(BGEPipelineRenderer):
             self.io.display_size = self.savedDisplaySize[0], self.savedDisplaySize[1]
 
     def updateIO(self):
-        self.updateScreenSize()
         io = imgui.get_io()
+        self.updateScreenSize(io)
 
         mouse = self.mouse
 
@@ -326,6 +334,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
                (mouse.position[1] * self.io.display_size[1]))
 
         io.mouse_pos = pos
+        self.cursorRenderer.updateCursorInfo(self.savedDisplaySize[1], pos)
 
         activeMouseButtons = mouse.activeInputs
 
@@ -375,7 +384,133 @@ class BGEImguiRenderer(BGEPipelineRenderer):
             io.add_input_character(ord(character))
 
         # Probably not needed, also deltaTime is only available in RanGE engine
-        # io.delta_time = bge.logic.deltaTime()
+        io.delta_time = bge.logic.deltaTime()
+
+    def setFont(self, path: str, font_scaling_factor: int, font_size_in_pixels: int, screen_scaling_factor: int):
+        io = imgui.get_io()
+
+        io.fonts.clear()
+        self.new_font = io.fonts.add_font_from_file_ttf(
+            path, font_scaling_factor * font_size_in_pixels)
+
+        screen_scaling_factor = bge.render.getWindowWidth() / screen_scaling_factor
+        scale = 1
+        scale /= font_scaling_factor
+        scale *= screen_scaling_factor
+        io.font_global_scale = scale
+        self.refresh_font_texture()
+
+
+class CursorRenderer:
+    def __init__(self, scene: KX_Scene) -> None:
+        self.scene = scene
+        self.mousePos = (0, 0)
+        self.height = 0
+        self.cursorWidth = 25
+        self.cursorHeight = 25
+
+    def setCursorSize(self, width: int, height: int):
+        self.cursorWidth = width
+        self.cursorHeight = height
+
+    def updateCursorInfo(self, height, mousePos):
+        self.height = height
+        self.mousePos = mousePos
+
+    def addCursor(self, filePath=None):
+        if not filePath:
+            filePath = bge.logic.expandPath("//cursor.png")
+
+        img = bge.texture.ImageFFmpeg(filePath)
+        dummy = img.image  # For some reason I have to assign it to get it to work?? Idk
+        img.refresh()
+        self.cursor_size = img.size
+
+        id_buf = bgl.Buffer(bgl.GL_INT, 1)
+        bgl.glGenTextures(1, id_buf)
+        self.cursor_tex_id = id_buf.to_list()[0]
+
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.cursor_tex_id)
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D,
+                            bgl.GL_TEXTURE_MIN_FILTER, bgl.GL_LINEAR)
+
+        bgl.glTexParameteri(bgl.GL_TEXTURE_2D,
+                            bgl.GL_TEXTURE_MAG_FILTER, bgl.GL_LINEAR)
+        bgl.glTexImage2D(bgl.GL_TEXTURE_2D, 0, bgl.GL_RGBA, img.size[0], img.size[1], 0,
+                         gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, img.image)
+        self.cursorTexCo = [(0, 0), (1, 0), (1, 1), (0, 1)]
+        self.cursorBackColor = [1, 1, 1, 1]
+        self.scene.post_draw.append(self.drawCursor)
+
+    def drawCursor(self):
+        width = self.cursorWidth
+        height = self.cursorHeight
+
+        x = self.mousePos[0]
+        y = - self.mousePos[1] + self.height - height
+        gl_position = [
+            [x, y],
+            [x + width, y],
+            [x + width, y + height],
+            [x, y + height]
+        ]
+        # Get some viewport info
+        buf = bgl.Buffer(bgl.GL_INT, 4)
+        bgl.glGetIntegerv(bgl.GL_VIEWPORT, buf)
+        view = buf.to_list()
+        # Save the state
+        bgl.glPushAttrib(bgl.GL_ALL_ATTRIB_BITS)
+
+        # Disable depth test so we always draw over things
+        bgl.glDisable(bgl.GL_DEPTH_TEST)
+
+        # Disable lighting so everything is shadless
+        bgl.glDisable(bgl.GL_LIGHTING)
+
+        # Unbinding the texture prevents BGUI frames from somehow picking up on
+        # color of the last used texture
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, 0)
+
+        # Make sure we're using smooth shading instead of flat
+        bgl.glShadeModel(bgl.GL_SMOOTH)
+
+        # Setup the matrices
+        bgl.glMatrixMode(bgl.GL_TEXTURE)
+        bgl.glPushMatrix()
+        bgl.glLoadIdentity()
+        bgl.glMatrixMode(bgl.GL_PROJECTION)
+        bgl.glPushMatrix()
+        bgl.glLoadIdentity()
+        bgl.gluOrtho2D(0, view[2], 0, view[3])
+        bgl.glMatrixMode(bgl.GL_MODELVIEW)
+        bgl.glPushMatrix()
+        bgl.glLoadIdentity()
+        # Enable textures
+        bgl.glEnable(bgl.GL_TEXTURE_2D)
+
+        # Enable alpha blending
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glBlendFunc(bgl.GL_SRC_ALPHA, bgl.GL_ONE_MINUS_SRC_ALPHA)
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.cursor_tex_id)
+
+        # Draw the textured quad
+        bgl.glColor4f(*self.cursorBackColor)
+
+        bgl.glBegin(gl.GL_QUADS)
+        for i in range(4):
+            bgl.glTexCoord2f(self.cursorTexCo[i][0], self.cursorTexCo[i][1])
+            bgl.glVertex2f(gl_position[i][0], gl_position[i][1])
+            # print(gl_position[i])
+        bgl.glEnd()
+
+        bgl.glBindTexture(bgl.GL_TEXTURE_2D, 0)
+        # Reset the state
+        bgl.glPopMatrix()
+        bgl.glMatrixMode(bgl.GL_PROJECTION)
+        bgl.glPopMatrix()
+        bgl.glMatrixMode(bgl.GL_TEXTURE)
+        bgl.glPopMatrix()
+        bgl.glPopAttrib()
 
 
 def get_common_gl_state():
