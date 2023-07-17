@@ -24,6 +24,7 @@ class BGEImguiWrapper:
 
     def run(self):
         backend = self.imgui_backend
+        backend.updateIO()
 
         imgui.new_frame()
 
@@ -38,7 +39,7 @@ class BGEImguiWrapper:
                 imgui.extra.text_ansi_colored("Eggs", 0.2, 1.0, 0.0)
 
             imgui.end()
-        if False:
+        if True:
             # open new window context
             imgui.begin("Your first window!", True)
 
