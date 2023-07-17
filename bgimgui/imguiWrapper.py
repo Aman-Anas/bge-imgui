@@ -27,7 +27,7 @@ class BGEImguiWrapper:
 
         imgui.new_frame()
 
-        if False:
+        if True:
             is_expand, self.show_custom_window = imgui.begin(
                 "Custom window", True)
             if is_expand:
@@ -37,13 +37,15 @@ class BGEImguiWrapper:
                     "Eg\033[31mgAn\033[msi ", 0.2, 1.0, 0.0)
                 imgui.extra.text_ansi_colored("Eggs", 0.2, 1.0, 0.0)
 
-        # open new window context
-        imgui.begin("Your first window!", True)
+            imgui.end()
+        if False:
+            # open new window context
+            imgui.begin("Your first window!", True)
 
-        # draw text label inside of current window
-        imgui.text("Hello world!")
+            # draw text label inside of current window
+            imgui.text("Hello world!")
 
-        imgui.end()
+            imgui.end()
         # backend.process_inputs()
         imgui.render()
         backend.render(imgui.get_draw_data())
