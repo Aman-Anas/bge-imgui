@@ -145,48 +145,6 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         gl.glBindVertexArray(last_vertex_array)
         pass
 
-    def saveLoadGLState(self):
-        view = glGetIntegerv(GL_VIEWPORT)
-        # Save the state
-        glPushAttrib(GL_ALL_ATTRIB_BITS)
-
-        # Disable depth test so we always draw over things
-        glDisable(GL_DEPTH_TEST)
-
-        # Disable lighting so everything is shadless
-        glDisable(GL_LIGHTING)
-
-        # Unbinding the texture prevents BGUI frames from somehow picking up on
-        # color of the last used texture
-        glBindTexture(GL_TEXTURE_2D, 0)
-
-        # Make sure we're using smooth shading instead of flat
-        glShadeModel(GL_SMOOTH)
-
-        # Setup the matrices
-        glMatrixMode(GL_TEXTURE)
-        glPushMatrix()
-        glLoadIdentity()
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        gluOrtho2D(0, view[2], 0, view[3])
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glLoadIdentity()
-
-        # Do things
-        self.renderCall()
-
-        # Reset the state
-        glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
-        glMatrixMode(GL_PROJECTION)
-        glPopMatrix()
-        glMatrixMode(GL_TEXTURE)
-        glPopMatrix()
-        glPopAttrib()
-
     def render(self, draw_data):
 
         self.data = draw_data
