@@ -13,43 +13,40 @@ class BGEImguiWrapper:
         self.imgui_context = imgui.create_context()
         self.imgui_backend = BGEImguiRenderer(scene)
 
-        self.show_custom_window = True
+        self.initializeGUI()
 
+        self.keepGUIRunning = True
         self.guiThread = Thread(target=self.runGUIThread)
         self.guiThread.start()
-        bge.logic.mouse.visible = True
+
+    def initializeGUI(self):
+        io = imgui.get_io()
+        backend = self.imgui_backend
+
+        path = bge.logic.expandPath("//Orbitron-VariableFont_wght.ttf")
+
+        # Just an approximation, can be tweaked with these scaling factors
+        font_scaling_factor = 2
+        font_size_in_pixels = 20
+        screen_scaling_factor = 1000
+        backend.setFont(path, font_scaling_factor,
+                        font_size_in_pixels, screen_scaling_factor)
+
+        self.show_custom_window = True
 
     def runGUIThread(self):
-        while True:
+        while self.keepGUIRunning:
             self.run()
             time.sleep(sys.float_info.epsilon)
+
+    def updateOnGameFrame(self):
+        backend = self.imgui_backend
+        backend.updateIO()
 
     def run(self):
         backend = self.imgui_backend
 
-        backend.updateIO()
-
         imgui.new_frame()
-
-        if False:
-            is_expand, self.show_custom_window = imgui.begin(
-                "Custom window", True)
-            if is_expand:
-                imgui.text("Bar")
-                imgui.text_ansi("B\033[31marA\033[mnsi ")
-                imgui.text_ansi_colored(
-                    "Eg\033[31mgAn\033[msi ", 0.2, 1.0, 0.0)
-                imgui.extra.text_ansi_colored("Eggs", 0.2, 1.0, 0.0)
-
-            imgui.end()
-        if False:
-            # open new window context
-            imgui.begin("Your first window!", True)
-
-            # draw text label inside of current window
-            imgui.text("Hello world!")
-
-            imgui.end()
 
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("File", True):
@@ -74,5 +71,13 @@ class BGEImguiWrapper:
                 imgui.text_colored("Eggs", 0.2, 1.0, 0.0)
             imgui.end()
 
+        with imgui.font(self.imgui_backend.new_font):
+            imgui.text("Text displayed using custom font")
+
         imgui.render()
         backend.render(imgui.get_draw_data())
+
+    def shutdownGUI(self):
+        self.keepGUIRunning = False
+        self.imgui_backend.shutdown()
+        self.guiThread.join()
