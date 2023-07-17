@@ -173,8 +173,8 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         draw_data.scale_clip_rects(*io.display_fb_scale)
 
         # backup GL state
-        # todo: provide cleaner version of this backup-restore code
         common_gl_state_tuple = get_common_gl_state()
+
         last_program = gl.glGetIntegerv(gl.GL_CURRENT_PROGRAM)
         last_active_texture = gl.glGetIntegerv(gl.GL_ACTIVE_TEXTURE)
         last_array_buffer = gl.glGetIntegerv(gl.GL_ARRAY_BUFFER_BINDING)
