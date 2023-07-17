@@ -41,10 +41,13 @@ class BGEImguiWrapper:
 
     def updateOnGameFrame(self):
         backend = self.imgui_backend
-        backend.updateIO()
+        backend.updateOnFrame()
 
     def run(self):
         backend = self.imgui_backend
+
+        # Update inputs like mouse/keyboard
+        backend.updateOnLoop()
 
         imgui.new_frame()
 

@@ -310,7 +310,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         for bgeKey, imguiKey in BGE_KEY_EVENT_MAP.items():
             key_map[imguiKey] = bgeKey
 
-    def updateScreenSize(self, io):
+    def updateScreenSize(self):
         width = bge.render.getWindowWidth()
         height = bge.render.getWindowHeight()
         refreshSize = True
@@ -324,10 +324,18 @@ class BGEImguiRenderer(BGEPipelineRenderer):
             self.savedDisplaySize = width, height
             self.io.display_size = self.savedDisplaySize[0], self.savedDisplaySize[1]
 
-    def updateIO(self):
+    def updateOnFrame(self):
         io = imgui.get_io()
-        self.updateScreenSize(io)
+        # Run functions to execute once every game frame
+        self.updateScreenSize()
+        self.updateKeyboardText(io)
 
+    def updateOnLoop(self):
+        io = imgui.get_io()
+        self.updateMouse(io)
+        self.updateKeyboard(io)
+
+    def updateMouse(self, io):
         mouse = self.mouse
 
         pos = ((mouse.position[0] * self.io.display_size[0]),
@@ -360,6 +368,10 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         else:
             io.mouse_wheel = 0
 
+        # Probably not needed, also deltaTime is only available in RanGE engine
+        io.delta_time = bge.logic.deltaTime()
+
+    def updateKeyboard(self, io):
         keyboard = self.keyboard
         keyMap = BGE_KEY_EVENT_MAP
 
@@ -379,12 +391,11 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         io.key_shift = (bge.events.LEFTSHIFTKEY in activeKeys) or (
             bge.events.RIGHTSHIFTKEY in activeKeys)
 
+    def updateKeyboardText(self, io):
+        keyboard = self.keyboard
         text = keyboard.text
         for character in text:
             io.add_input_character(ord(character))
-
-        # Probably not needed, also deltaTime is only available in RanGE engine
-        io.delta_time = bge.logic.deltaTime()
 
     def setFont(self, path: str, font_scaling_factor: int, font_size_in_pixels: int, screen_scaling_factor: int):
         io = imgui.get_io()
