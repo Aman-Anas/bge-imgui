@@ -262,37 +262,120 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         self._font_texture = 0
 
 
+BGE_KEY_EVENT_MAP = {
+    bge.events.TABKEY: imgui.KEY_TAB,
+    bge.events.LEFTARROWKEY: imgui.KEY_LEFT_ARROW,
+    bge.events.RIGHTARROWKEY: imgui.KEY_RIGHT_ARROW,
+    bge.events.UPARROWKEY: imgui.KEY_UP_ARROW,
+    bge.events.DOWNARROWKEY: imgui.KEY_DOWN_ARROW,
+    bge.events.PAGEUPKEY: imgui.KEY_PAGE_UP,
+    bge.events.PAGEDOWNKEY: imgui.KEY_PAGE_DOWN,
+    bge.events.HOMEKEY: imgui.KEY_HOME,
+    bge.events.ENDKEY: imgui.KEY_END,
+    bge.events.DELKEY: imgui.KEY_DELETE,
+    bge.events.BACKSPACEKEY: imgui.KEY_BACKSPACE,
+    bge.events.ENTERKEY: imgui.KEY_ENTER,
+    bge.events.ESCKEY: imgui.KEY_ESCAPE,
+    bge.events.AKEY: imgui.KEY_A,
+    bge.events.CKEY: imgui.KEY_C,
+    bge.events.VKEY: imgui.KEY_V,
+    bge.events.XKEY: imgui.KEY_X,
+    bge.events.YKEY: imgui.KEY_Y,
+    bge.events.ZKEY: imgui.KEY_Z,
+}
+
+
 class BGEImguiRenderer(BGEPipelineRenderer):
     def __init__(self, scene):
         self.scene = scene
         super().__init__(scene)
-        self.io.display_size = bge.render.getWindowWidth(), bge.render.getWindowHeight()
+
+        self.savedDisplaySize = bge.render.getWindowWidth(), bge.render.getWindowHeight()
+        self.io.display_size = self.savedDisplaySize[0], self.savedDisplaySize[1]
 
         self.mouse = bge.logic.mouse
+        self.keyboard = bge.logic.keyboard
+        self._map_keys()
+
+    def _map_keys(self):
+        key_map = self.io.key_map
+        for bgeKey, imguiKey in BGE_KEY_EVENT_MAP.items():
+            key_map[imguiKey] = bgeKey
+
+    def updateScreenSize(self):
+        width = bge.render.getWindowWidth()
+        height = bge.render.getWindowHeight()
+        refreshSize = True
+
+        if self.savedDisplaySize[0] != width:
+            refreshSize = True
+        elif self.savedDisplaySize[1] != height:
+            refreshSize = True
+
+        if refreshSize:
+            self.savedDisplaySize = width, height
+            self.io.display_size = self.savedDisplaySize[0], self.savedDisplaySize[1]
 
     def updateIO(self):
-        mouse = self.mouse
+        self.updateScreenSize()
         io = imgui.get_io()
+
+        mouse = self.mouse
+
         pos = ((mouse.position[0] * self.io.display_size[0]),
                (mouse.position[1] * self.io.display_size[1]))
-        # print(pos)
 
         io.mouse_pos = pos
 
-        if bge.events.LEFTMOUSE in mouse.activeInputs:
+        activeMouseButtons = mouse.activeInputs
+
+        if bge.events.LEFTMOUSE in activeMouseButtons:
             io.mouse_down[0] = 1
         else:
             io.mouse_down[0] = 0
 
-        if bge.events.RIGHTMOUSE in mouse.activeInputs:
+        if bge.events.RIGHTMOUSE in activeMouseButtons:
             io.mouse_down[1] = 1
         else:
             io.mouse_down[1] = 0
 
-        if bge.events.MIDDLEMOUSE in mouse.activeInputs:
+        if bge.events.MIDDLEMOUSE in activeMouseButtons:
             io.mouse_down[2] = 1
         else:
             io.mouse_down[2] = 0
+
+        if bge.events.WHEELUPMOUSE in activeMouseButtons:
+            io.mouse_wheel = .5
+        elif bge.events.WHEELDOWNMOUSE in activeMouseButtons:
+            io.mouse_wheel = -.5
+        else:
+            io.mouse_wheel = 0
+
+        keyboard = self.keyboard
+        keyMap = BGE_KEY_EVENT_MAP
+
+        for key, event in keyboard.inputs.items():
+            if key in keyMap:
+                if event.active:
+                    io.keys_down[key] = True
+                else:
+                    io.keys_down[key] = False
+
+        activeKeys = keyboard.activeInputs
+
+        io.key_ctrl = (bge.events.LEFTCTRLKEY in activeKeys) or (
+            bge.events.RIGHTCTRLKEY in activeKeys)
+        io.key_alt = (bge.events.LEFTALTKEY in activeKeys) or (
+            bge.events.RIGHTALTKEY in activeKeys)
+        io.key_shift = (bge.events.LEFTSHIFTKEY in activeKeys) or (
+            bge.events.RIGHTSHIFTKEY in activeKeys)
+
+        text = keyboard.text
+        for character in text:
+            io.add_input_character(ord(character))
+
+        # Probably not needed, also deltaTime is only available in RanGE engine
+        # io.delta_time = bge.logic.deltaTime()
 
 
 def get_common_gl_state():
