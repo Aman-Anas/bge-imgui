@@ -41,6 +41,8 @@ class BGEImguiWrapper:
 
         self.drawGUI()
 
+        backend.drawCursor()
+
         imgui.end_frame()
 
         imgui.render()
