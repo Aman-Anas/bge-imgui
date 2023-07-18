@@ -26,11 +26,15 @@ class BGEImguiWrapper:
         path = bge.logic.expandPath("//Orbitron-VariableFont_wght.ttf")
 
         # Just an approximation, can be tweaked with these scaling factors
-        font_scaling_factor = 2
+        font_scaling_factor = 1  # Set to 2 for high res displays?
         font_size_in_pixels = 20
-        screen_scaling_factor = 1000
-        backend.setFont(path, font_scaling_factor,
-                        font_size_in_pixels, screen_scaling_factor)
+        # screen_scaling_factor = 1000
+        backend.setScalingFactors(font_scaling_factor)
+        backend.setMainFont(path, font_size_in_pixels)
+
+        extraFontPath = bge.logic.expandPath("//Blackout 2 AM.ttf")
+        self.extra_font = backend.addExtraFont(
+            extraFontPath, font_size_in_pixels)
 
         self.show_custom_window = True
 
@@ -74,8 +78,10 @@ class BGEImguiWrapper:
                 imgui.text_colored("Eggs", 0.2, 1.0, 0.0)
             imgui.end()
 
-        with imgui.font(self.imgui_backend.new_font):
+        imgui.begin("Default Window")
+        with imgui.font(self.extra_font):
             imgui.text("Text displayed using custom font")
+        imgui.end()
 
         imgui.render()
         backend.render(imgui.get_draw_data())

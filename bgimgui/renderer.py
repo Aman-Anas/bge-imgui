@@ -302,6 +302,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.keyboard = bge.logic.keyboard
         self.cursorRenderer = CursorRenderer(scene)
         self.cursorRenderer.addCursor()
+        self.font_scaling_factor = 1
 
         self._map_keys()
 
@@ -397,19 +398,42 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         for character in text:
             io.add_input_character(ord(character))
 
-    def setFont(self, path: str, font_scaling_factor: int, font_size_in_pixels: int, screen_scaling_factor: int):
+    def setScalingFactors(self, font_scaling_factor: int, screen_scaling_factor: int = None):
+        if not screen_scaling_factor:
+            screen_scaling_factor = self.savedDisplaySize[0]
+
         io = imgui.get_io()
 
-        io.fonts.clear()
-        self.new_font = io.fonts.add_font_from_file_ttf(
-            path, font_scaling_factor * font_size_in_pixels)
+        # Rough way to auto scale depending on display size... needs tweaking
+        # To skip using it, just don't pass in any scaling factor to this function
+        # And it'll divide out to 1
+        screen_scaling_factor = self.savedDisplaySize[0] / \
+            screen_scaling_factor
 
-        screen_scaling_factor = bge.render.getWindowWidth() / screen_scaling_factor
+        # Use to make a font bigger than the 1:1 ratio, supposedly fixes issues with
+        # high-res displays
+        self.font_scaling_factor = font_scaling_factor
+
         scale = 1
         scale /= font_scaling_factor
         scale *= screen_scaling_factor
         io.font_global_scale = scale
+
+    def setMainFont(self, path: str, font_size_in_pixels: int):
+        io = imgui.get_io()
+
+        io.fonts.clear()
+        self.main_font = io.fonts.add_font_from_file_ttf(
+            path, self.font_scaling_factor * font_size_in_pixels)
+
         self.refresh_font_texture()
+
+    def addExtraFont(self, path: str, font_size_in_pixels: int):
+        io = imgui.get_io()
+        newFont = io.fonts.add_font_from_file_ttf(
+            path, self.font_scaling_factor * font_size_in_pixels)
+        self.refresh_font_texture()
+        return newFont
 
 
 class CursorRenderer:
