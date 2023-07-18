@@ -20,23 +20,8 @@ class BGEImguiWrapper:
         self.guiThread.start()
 
     def initializeGUI(self):
-        io = imgui.get_io()
-        backend = self.imgui_backend
-
-        path = bge.logic.expandPath("//Orbitron-VariableFont_wght.ttf")
-
-        # Just an approximation, can be tweaked with these scaling factors
-        font_scaling_factor = 1  # Set to 2 for high res displays?
-        font_size_in_pixels = 20
-        # screen_scaling_factor = 1000
-        backend.setScalingFactors(font_scaling_factor)
-        backend.setMainFont(path, font_size_in_pixels)
-
-        extraFontPath = bge.logic.expandPath("//Blackout 2 AM.ttf")
-        self.extra_font = backend.addExtraFont(
-            extraFontPath, font_size_in_pixels)
-
-        self.show_custom_window = True
+        pass
+        # For child classes to override
 
     def runGUIThread(self):
         while self.keepGUIRunning:
@@ -58,36 +43,14 @@ class BGEImguiWrapper:
 
         imgui.new_frame()
 
-        if imgui.begin_main_menu_bar():
-            if imgui.begin_menu("File", True):
-
-                clicked_quit, selected_quit = imgui.menu_item(
-                    "Quit", "Cmd+Q", False, True
-                )
-
-                if clicked_quit:
-                    sys.exit(0)
-
-                imgui.end_menu()
-            imgui.end_main_menu_bar()
-
-        imgui.show_test_window()
-
-        if self.show_custom_window:
-            is_expand, self.show_custom_window = imgui.begin(
-                "Custom window", True)
-            if is_expand:
-                imgui.text("Bar")
-                imgui.text_colored("Eggs", 0.2, 1.0, 0.0)
-            imgui.end()
-
-        imgui.begin("Default Window")
-        with imgui.font(self.extra_font):
-            imgui.text("Text displayed using custom font")
-        imgui.end()
+        self.drawGUI()
 
         imgui.render()
         backend.render(imgui.get_draw_data())
+
+    def drawGUI(self):
+        pass
+        # For child classes to override
 
     def shutdownGUI(self):
         self.keepGUIRunning = False
