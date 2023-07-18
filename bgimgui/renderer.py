@@ -9,6 +9,8 @@ from OpenGL import GL as gl
 import bgl
 import time
 import sys
+import pathlib
+from PIL import Image
 
 
 class BGEPipelineRenderer(BaseOpenGLRenderer):
@@ -387,7 +389,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
             bge.events.RIGHTALTKEY in activeKeys)
         io.key_shift = (bge.events.LEFTSHIFTKEY in activeKeys) or (
             bge.events.RIGHTSHIFTKEY in activeKeys)
-        
+
         keyboard = self.keyboard
         text = keyboard.text
         for character in text:
@@ -430,8 +432,72 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.refresh_font_texture()
         return newFont
 
+    def drawCursor(self):
+        self.cursorRenderer.drawCursor()
+
+
+def get_rgba_pixels(image: Image.Image):
+    if image.mode == "RGB":
+        return image.tobytes("raw", "RGBX")
+    else:
+        if image.mode != "RGBA":
+            image = image.convert("RGBA")
+        return image.tobytes("raw", "RGBA")
+
 
 class CursorRenderer:
+    def __init__(self, scene: KX_Scene) -> None:
+        self.scene = scene
+        self.mousePos = (0, 0)
+        self.height = 0
+        self.cursorWidth = 25
+        self.cursorHeight = 25
+
+    def setCursorSize(self, width: int, height: int):
+        self.cursorWidth = width
+        self.cursorHeight = height
+
+    def updateCursorInfo(self, height, mousePos):
+        self.height = height
+        self.mousePos = mousePos
+
+    def addCursor(self, filePath=None):
+        if not filePath:
+            filePath = bge.logic.expandPath("//cursor.png")
+
+        self.path = pathlib.Path(filePath)
+        image = Image.open(self.path)
+        width, height = image.size
+        cursorPixels = get_rgba_pixels(image)
+
+        self.texture_id = gl.glGenTextures(1)
+
+        gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture_id)
+        gl.glTexParameteri(
+            gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
+        gl.glTexParameteri(
+            gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
+        gl.glTexParameteri(
+            gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_BORDER)
+        gl.glTexParameteri(
+            gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_BORDER)
+        gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, width,
+                        height, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, cursorPixels)
+
+    def drawCursor(self):
+        width = self.cursorWidth
+        height = self.cursorHeight
+
+        x = self.mousePos[0]
+        y = self.mousePos[1]  # + self.height - height
+
+        draw_list = imgui.get_foreground_draw_list()
+        pos = x, y
+        pos2 = (x + width, y + height)
+        draw_list.add_image(self.texture_id, pos, pos2)
+
+
+class BGLCursorRenderer:
     def __init__(self, scene: KX_Scene) -> None:
         self.scene = scene
         self.mousePos = (0, 0)
