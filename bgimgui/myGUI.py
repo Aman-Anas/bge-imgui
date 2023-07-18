@@ -1,10 +1,13 @@
 from .imguiWrapper import BGEImguiWrapper
+from . import widgets
 import bge
 import imgui
 import sys
 
 
 class MyCustomGUI(BGEImguiWrapper):
+    # Example class for how you would override and make your own GUI
+
     def initializeGUI(self):
         super().initializeGUI()
 
@@ -25,8 +28,17 @@ class MyCustomGUI(BGEImguiWrapper):
 
         self.show_custom_window = True
 
+        # Add window objects
+        coolWindow = widgets.GUIWindow("Cool Window", False)
+
+        coolWindow.addWidget(widgets.ImageWidget(
+            bge.logic.expandPath("//cursor.png"), rounding=5))
+
+        self.addWindow(coolWindow)
+
     def drawGUI(self):
-        super().drawGUI()
+
+        # Draw Menu Bar
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("File", True):
 
@@ -40,6 +52,10 @@ class MyCustomGUI(BGEImguiWrapper):
                 imgui.end_menu()
             imgui.end_main_menu_bar()
 
+        # Draws all of the added window objects
+        super().drawGUI()
+
+        # Can draw procedurally here too
         imgui.show_test_window()
 
         if self.show_custom_window:

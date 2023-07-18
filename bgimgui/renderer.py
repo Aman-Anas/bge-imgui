@@ -325,14 +325,10 @@ class BGEImguiRenderer(BGEPipelineRenderer):
             self.savedDisplaySize = width, height
             self.io.display_size = self.savedDisplaySize[0], self.savedDisplaySize[1]
 
-    def updateOnFrame(self):
+    def updateIO(self):
         io = imgui.get_io()
         # Run functions to execute once every game frame
         self.updateScreenSize()
-        self.updateKeyboardText(io)
-
-    def updateOnLoop(self):
-        io = imgui.get_io()
         self.updateMouse(io)
         self.updateKeyboard(io)
 
@@ -391,8 +387,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
             bge.events.RIGHTALTKEY in activeKeys)
         io.key_shift = (bge.events.LEFTSHIFTKEY in activeKeys) or (
             bge.events.RIGHTSHIFTKEY in activeKeys)
-
-    def updateKeyboardText(self, io):
+        
         keyboard = self.keyboard
         text = keyboard.text
         for character in text:
