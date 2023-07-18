@@ -41,6 +41,9 @@ class BGEImguiWrapper:
     def runGUIThread(self):
         while self.keepGUIRunning:
             self.run()
+
+            # May not be needed, but this yields the thread to other ones
+            # Avoids holding up game frame rendering
             time.sleep(sys.float_info.epsilon)
 
     def updateOnGameFrame(self):
