@@ -26,6 +26,7 @@ class MyCustomGUI(BGEImguiWrapper):
         self.extra_font = backend.addExtraFont(
             extra_font_path, extra_font_size)
 
+        self.show_test_window = True
         self.show_custom_window = True
 
         # Add window objects
@@ -41,7 +42,7 @@ class MyCustomGUI(BGEImguiWrapper):
         self.randomForegroundImage.setImagePosition(100, 50)
 
         self.randomBackgroundImage = widgets.BackgroundImage(
-            bge.logic.expandPath("//cursor.png"), rounding=5)
+            bge.logic.expandPath("//cursor.png"))
         self.randomBackgroundImage.setImagePosition(500, 500)
         self.randomBackgroundImage.setScale(0.2, 0.2)
 
@@ -74,10 +75,12 @@ class MyCustomGUI(BGEImguiWrapper):
                 imgui.text_colored("Eggs", 0.2, 1.0, 0.0)
             imgui.end()
 
-        imgui.begin("Default Window")
-        with imgui.font(self.extra_font):
-            imgui.text("Text displayed using custom font")
-        imgui.end()
+        if self.show_test_window:
+            expand, self.show_test_window = imgui.begin("Default Window", True)
+            if expand:
+                with imgui.font(self.extra_font):
+                    imgui.text("Text displayed using custom font")
+            imgui.end()
 
         self.randomForegroundImage.draw()
         self.randomBackgroundImage.draw()
