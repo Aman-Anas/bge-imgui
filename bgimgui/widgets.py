@@ -1,4 +1,4 @@
-from .image import ImageHelper, ForegroundImageHelper
+from .image import ImageHelper, ForegroundImageHelper, BackgroundImageHelper
 import os
 import imgui
 
@@ -69,6 +69,21 @@ class ForegroundImage(ImageWidget):
     def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False) -> None:
         super().__init__(file, scale, rounding, flags,
                          drawBoundRect, imageClass=ForegroundImageHelper)
+
+    def setImagePosition(self, x, y):
+        self.image.setImagePosition(x, y)
+
+    def draw(self):
+        if self.window is not None:
+            pos = imgui.get_cursor_screen_pos()
+            self.image.image_position = (pos.x, pos.y)
+        super().draw()
+
+
+class BackgroundImage(ImageWidget):
+    def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False) -> None:
+        super().__init__(file, scale, rounding, flags,
+                         drawBoundRect, imageClass=BackgroundImageHelper)
 
     def setImagePosition(self, x, y):
         self.image.setImagePosition(x, y)

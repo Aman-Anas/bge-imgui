@@ -3,7 +3,6 @@ from . import widgets
 import bge
 import imgui
 import sys
-from .image import ForegroundImageHelper
 
 
 class MyCustomGUI(BGEImguiWrapper):
@@ -41,6 +40,11 @@ class MyCustomGUI(BGEImguiWrapper):
             bge.logic.expandPath("//cursor.png"), rounding=5)
         self.randomForegroundImage.setImagePosition(100, 50)
 
+        self.randomBackgroundImage = widgets.BackgroundImage(
+            bge.logic.expandPath("//cursor.png"), rounding=5)
+        self.randomBackgroundImage.setImagePosition(500, 500)
+        self.randomBackgroundImage.setScale(0.2, 0.2)
+
     def drawGUI(self):
         # Draw Menu Bar
         if imgui.begin_main_menu_bar():
@@ -76,3 +80,4 @@ class MyCustomGUI(BGEImguiWrapper):
         imgui.end()
 
         self.randomForegroundImage.draw()
+        self.randomBackgroundImage.draw()
