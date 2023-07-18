@@ -2,7 +2,6 @@ from .myGUI import MyCustomGUI
 from bge.types import SCA_PythonController
 import bge
 
-
 def startGUI(cont: SCA_PythonController):
     if cont.sensors["tap"].positive:
         own = cont.owner
