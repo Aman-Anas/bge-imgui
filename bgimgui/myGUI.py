@@ -10,6 +10,10 @@ class MyCustomGUI(BGEImguiWrapper):
 
     def initializeGUI(self):
         super().initializeGUI()
+        io = imgui.get_io()
+
+        # allow user to navigate UI with a keyboard
+        io.config_flags |= imgui.CONFIG_NAV_ENABLE_KEYBOARD
 
         backend = self.imgui_backend
 
