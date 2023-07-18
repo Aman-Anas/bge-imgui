@@ -3,6 +3,7 @@ from . import widgets
 import bge
 import imgui
 import sys
+from .image import ForegroundImageHelper
 
 
 class MyCustomGUI(BGEImguiWrapper):
@@ -29,15 +30,18 @@ class MyCustomGUI(BGEImguiWrapper):
         self.show_custom_window = True
 
         # Add window objects
-        coolWindow = widgets.GUIWindow("Cool Window", False)
+        coolWindow = widgets.GUIWindow("Cool Window")
 
         coolWindow.addWidget(widgets.ImageWidget(
             bge.logic.expandPath("//cursor.png"), rounding=5))
 
         self.addWindow(coolWindow)
 
-    def drawGUI(self):
+        self.randomForegroundImage = widgets.ForegroundImage(
+            bge.logic.expandPath("//cursor.png"), rounding=5)
+        self.randomForegroundImage.setImagePosition(100, 50)
 
+    def drawGUI(self):
         # Draw Menu Bar
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("File", True):
@@ -70,3 +74,5 @@ class MyCustomGUI(BGEImguiWrapper):
         with imgui.font(self.extra_font):
             imgui.text("Text displayed using custom font")
         imgui.end()
+
+        self.randomForegroundImage.draw()

@@ -1,11 +1,11 @@
-from .image import ImageHelper
+from .image import ImageHelper, ForegroundImageHelper
 import os
 import imgui
 
 
 class GUIWidget:
     def __init__(self) -> None:
-        pass
+        self.window = None
 
     def draw(self):
         pass
@@ -18,13 +18,13 @@ def draw_bounding_rect():
 
 
 class ImageWidget(GUIWidget):
-    def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False) -> None:
+    def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False, imageClass=ImageHelper) -> None:
         super().__init__()
         if not os.path.isfile(file):
             raise FileNotFoundError(
                 "Could not find file specified at {file} path. Try using bge.logic.expandPath() to get the correct path")
 
-        self.image = ImageHelper(file)
+        self.image = imageClass(file)
         self.drawBoundRect = drawBoundRect
 
         self.scale = scale
@@ -65,6 +65,21 @@ class ImageWidget(GUIWidget):
             draw_bounding_rect()
 
 
+class ForegroundImage(ImageWidget):
+    def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False) -> None:
+        super().__init__(file, scale, rounding, flags,
+                         drawBoundRect, imageClass=ForegroundImageHelper)
+
+    def setImagePosition(self, x, y):
+        self.image.setImagePosition(x, y)
+
+    def draw(self):
+        if self.window is not None:
+            pos = imgui.get_cursor_screen_pos()
+            self.image.image_position = (pos.x, pos.y)
+        super().draw()
+
+
 class GUIWindow:
     def __init__(self, name: str, closable: bool = True, flags=None) -> None:
         super().__init__()
@@ -85,11 +100,12 @@ class GUIWindow:
         self.show = False
 
     def draw(self):
-        is_expand, self.show = imgui.begin(
-            self.name, closable=self.closable, flags=self.flags)
-        if is_expand:
-            self.drawWidgets()
-        imgui.end()
+        if self.show:
+            is_expand, self.show = imgui.begin(
+                self.name, closable=self.closable, flags=self.flags)
+            if is_expand:
+                self.drawWidgets()
+            imgui.end()
 
     def drawWidgets(self):
         for widget in self.widgets:
@@ -97,3 +113,4 @@ class GUIWindow:
 
     def addWidget(self, widget: GUIWidget):
         self.widgets.append(widget)
+        widget.window = self
