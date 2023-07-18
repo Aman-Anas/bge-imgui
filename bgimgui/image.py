@@ -208,8 +208,8 @@ class ForegroundImageHelper(ImageHelper):
     def render(self, width: int, height: int, *args, **kwargs):
         if imgui.is_rect_visible(width, height):
             position = self.image_position
+            flags = kwargs.pop("flags", None)
             if "rounding" in kwargs:
-                flags = kwargs.pop("flags", None)
                 if flags is None:
                     flags = imgui.DRAW_ROUND_CORNERS_ALL
                 pos = position
@@ -223,7 +223,7 @@ class ForegroundImageHelper(ImageHelper):
                 pos2 = (pos[0] + width, pos[1] + height)
                 draw_list = imgui.get_foreground_draw_list()
                 draw_list.add_image(self.texture_id, tuple(
-                    pos), pos2, *args, flags=flags, **kwargs)
+                    pos), pos2, *args, **kwargs)
 
             return True
         else:
@@ -243,8 +243,8 @@ class BackgroundImageHelper(ImageHelper):
     def render(self, width: int, height: int, *args, **kwargs):
         if imgui.is_rect_visible(width, height):
             position = self.image_position
+            flags = kwargs.pop("flags", None)
             if "rounding" in kwargs:
-                flags = kwargs.pop("flags", None)
                 if flags is None:
                     flags = imgui.DRAW_ROUND_CORNERS_ALL
                 pos = position
@@ -258,7 +258,7 @@ class BackgroundImageHelper(ImageHelper):
                 pos2 = (pos[0] + width, pos[1] + height)
                 draw_list = imgui.get_background_draw_list()
                 draw_list.add_image(self.texture_id, tuple(
-                    pos), pos2, *args, flags=flags, **kwargs)
+                    pos), pos2, *args, **kwargs)
 
             return True
         else:
