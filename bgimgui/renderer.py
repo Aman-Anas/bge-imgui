@@ -306,6 +306,12 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.cursorRenderer.addCursor()
         self.font_scaling_factor = 1
 
+        # Check for RanGE so deltaTime can be updated
+        if hasattr(bge.logic, "deltaTime"):
+            self.useDeltaTime = True
+        else:
+            self.useDeltaTime = False
+
         self._map_keys()
 
     def _map_keys(self):
@@ -367,8 +373,9 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         else:
             io.mouse_wheel = 0
 
-        # Probably not needed, also deltaTime is only available in RanGE engine
-        io.delta_time = bge.logic.deltaTime()
+        if self.useDeltaTime:
+            # Update deltatime in range, may not be necessary
+            io.delta_time = bge.logic.deltaTime()
 
     def updateKeyboard(self, io):
         keyboard = self.keyboard
