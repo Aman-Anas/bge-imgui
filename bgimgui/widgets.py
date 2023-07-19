@@ -1,14 +1,8 @@
+from __future__ import annotations
 from .image import ImageHelper, ForegroundImageHelper, BackgroundImageHelper
 import os
 import imgui
-
-
-class GUIWidget:
-    def __init__(self) -> None:
-        self.window = None
-
-    def draw(self):
-        pass
+import bge.logic
 
 
 def draw_bounding_rect():
@@ -17,7 +11,7 @@ def draw_bounding_rect():
                        imgui.get_color_u32_rgba(1, 1, 1, 1), thickness=2)
 
 
-class ImageWidget(GUIWidget):
+class ImageWidget:
     def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False, imageClass=ImageHelper) -> None:
         super().__init__()
         if not os.path.isfile(file):
@@ -69,9 +63,16 @@ class ForegroundImage(ImageWidget):
     def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False) -> None:
         super().__init__(file, scale, rounding, flags,
                          drawBoundRect, imageClass=ForegroundImageHelper)
+        self.window = None
 
     def setImagePosition(self, x, y):
         self.image.setImagePosition(x, y)
+
+    def attachToWindow(self, window: GUIWindow):
+        self.window = window
+
+    def detachWindow(self):
+        self.window = None
 
     def draw(self):
         if self.window is not None:
@@ -84,9 +85,16 @@ class BackgroundImage(ImageWidget):
     def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False) -> None:
         super().__init__(file, scale, rounding, flags,
                          drawBoundRect, imageClass=BackgroundImageHelper)
+        self.window = None
 
     def setImagePosition(self, x, y):
         self.image.setImagePosition(x, y)
+
+    def attachToWindow(self, window: GUIWindow):
+        self.window = window
+
+    def detachWindow(self):
+        self.window = None
 
     def draw(self):
         if self.window is not None:
@@ -96,11 +104,12 @@ class BackgroundImage(ImageWidget):
 
 
 class GUIWindow:
-    def __init__(self, name: str, closable: bool = True, flags=None) -> None:
+    def __init__(self, name: str, io: imgui._IO, closable: bool = True, flags=None) -> None:
         super().__init__()
         self.name = name
         self.closable = closable
-        self.widgets: list[GUIWidget] = []
+        self.io = io
+
         if flags is None:
             self.flags = 0
         else:
@@ -114,18 +123,13 @@ class GUIWindow:
     def hide(self):
         self.show = False
 
-    def draw(self):
+    def drawWindow(self):
         if self.show:
             is_expand, self.show = imgui.begin(
                 self.name, closable=self.closable, flags=self.flags)
             if is_expand:
-                self.drawWidgets()
+                self.drawContents()
             imgui.end()
 
-    def drawWidgets(self):
-        for widget in self.widgets:
-            widget.draw()
-
-    def addWidget(self, widget: GUIWidget):
-        self.widgets.append(widget)
-        widget.window = self
+    def drawContents(self):
+        pass

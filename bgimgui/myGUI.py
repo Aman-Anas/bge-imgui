@@ -1,5 +1,6 @@
 from .imguiWrapper import BGEImguiWrapper
 from . import widgets
+from .myCustomWindows import MyCustomHealthBarWindow
 import bge
 import imgui
 import sys
@@ -46,10 +47,7 @@ class MyCustomGUI(BGEImguiWrapper):
         self.show_custom_window = True
 
         # Add window objects
-        coolWindow = widgets.GUIWindow("Cool Window")
-
-        coolWindow.addWidget(widgets.ImageWidget(
-            bge.logic.expandPath("//cursor.png"), rounding=5))
+        coolWindow = MyCustomHealthBarWindow("Cool Health Bar", io, 1000, 20)
 
         self.addWindow(coolWindow)
 
