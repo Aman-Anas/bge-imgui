@@ -7,8 +7,6 @@ import imgui
 import ctypes
 from OpenGL import GL as gl
 import bgl
-import time
-import sys
 import pathlib
 from PIL import Image
 

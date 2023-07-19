@@ -2,9 +2,6 @@ import imgui
 from .renderer import BGEImguiRenderer
 from .widgets import GUIWindow
 from bge.types import KX_Scene
-from threading import Thread
-import time
-import sys
 import bge.logic
 
 
