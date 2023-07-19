@@ -12,6 +12,11 @@ override the initializeGUI() and drawGUI() methods.
 An example is shown in `myGUI.py`, and a usage example in `main.py`
 
 For both UPBGE and RanGE, the example's logic bricks look roughly like this:
+
 ![example bricks](doc/ExampleBricks.png)
+
 But you can of course use Python Components or scripts however you want. 
 By default, the BGEImguiWrapper stores the instance of itself in bge.logic.gui to make it easy to access from other scripts.
+
+# Contribution
+Simply make a pull request and/or add an issue for any bugs you find, I'm also active on the UPBGE discord as well as blenderartists.org
