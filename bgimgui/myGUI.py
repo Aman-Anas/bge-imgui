@@ -8,12 +8,24 @@ import sys
 class MyCustomGUI(BGEImguiWrapper):
     # Example class for how you would override and make your own GUI
 
+    def styleGUI(self):
+        pass
+        # Example for how to style GUI
+        # style = imgui.get_style() # override active style
+        # imgui.style_colors_dark(style) # optional: set base colors from "Dark" (or any other) style
+        # # set red, green, blue and alpha color components for style colors you wanna change
+        # style.colors[imgui.COLOR_BORDER] = (r, g, b, a)
+        # style.colors[imgui.COLOR_TITLE_BACKGROUND] = (r, g, b, a)
+        # style.colors[imgui.COLOR_TITLE_BACKGROUND_ACTIVE] = (r, g, b, a)
+
     def initializeGUI(self):
         super().initializeGUI()
         io = imgui.get_io()
 
         # allow user to navigate UI with a keyboard
         io.config_flags |= imgui.CONFIG_NAV_ENABLE_KEYBOARD
+
+        self.styleGUI()
 
         backend = self.imgui_backend
 
