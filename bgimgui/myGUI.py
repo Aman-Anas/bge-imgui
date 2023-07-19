@@ -63,6 +63,8 @@ class MyCustomGUI(BGEImguiWrapper):
         self.randomBackgroundImage.setScale(0.2, 0.2)
 
     def drawGUI(self):
+        backend = self.imgui_backend
+
         # Draw Menu Bar
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("File", True):
@@ -80,12 +82,21 @@ class MyCustomGUI(BGEImguiWrapper):
         # Draws all of the added window objects
         super().drawGUI()
 
+        screenWidth, screenHeight = backend.getScreenSize()
+
         # Can draw procedurally here too
         imgui.show_test_window()
 
         if self.show_custom_window:
+
+            # Force set a window position
+            # Pivot allows to modify the "center" position on the window
+            # Where x=0 is the left and x=1 is the right
+            imgui.set_next_window_position(
+                screenWidth, screenHeight * 0.5, pivot_x=1, pivot_y=0.5)
+
             is_expand, self.show_custom_window = imgui.begin(
-                "Custom window", True)
+                "Custom window", True, flags=imgui.WINDOW_NO_MOVE | imgui.WINDOW_ALWAYS_AUTO_RESIZE | imgui.WINDOW_NO_TITLE_BAR)
             if is_expand:
                 imgui.text("Bar")
                 imgui.text_colored("Eggs", 0.2, 1.0, 0.0)

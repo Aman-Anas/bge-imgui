@@ -314,6 +314,9 @@ class BGEImguiRenderer(BGEPipelineRenderer):
 
         self._map_keys()
 
+    def getScreenSize(self):
+        return self.savedDisplaySize
+
     def _map_keys(self):
         key_map = self.io.key_map
         for bgeKey, imguiKey in BGE_KEY_EVENT_MAP.items():
@@ -402,17 +405,8 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         for character in text:
             io.add_input_character(ord(character))
 
-    def setScalingFactors(self, font_scaling_factor: int, screen_scaling_factor: int = None):
-        if not screen_scaling_factor:
-            screen_scaling_factor = self.savedDisplaySize[0]
-
+    def setScalingFactors(self, font_scaling_factor: int, screen_scaling_factor: int = 1):
         io = imgui.get_io()
-
-        # Rough way to auto scale depending on display size... needs tweaking
-        # To skip using it, just don't pass in any scaling factor to this function
-        # And it'll divide out to 1
-        screen_scaling_factor = self.savedDisplaySize[0] / \
-            screen_scaling_factor
 
         # Use to make a font bigger than the 1:1 ratio, supposedly fixes issues with
         # high-res displays
