@@ -291,7 +291,7 @@ BGE_KEY_EVENT_MAP = {
 
 
 class BGEImguiRenderer(BGEPipelineRenderer):
-    def __init__(self, scene):
+    def __init__(self, scene, cursorFile=None):
         self.scene = scene
         super().__init__(scene)
 
@@ -301,7 +301,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.mouse = bge.logic.mouse
         self.keyboard = bge.logic.keyboard
         self.cursorRenderer = CursorRenderer(scene)
-        self.cursorRenderer.addCursor()
+        self.cursorRenderer.addCursor(cursorFile)
         self.show_cursor = True
         self.font_scaling_factor = 1
 
