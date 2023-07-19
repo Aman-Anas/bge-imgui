@@ -21,6 +21,9 @@ class BGEImguiWrapper:
     def addWindow(self, window: GUIWindow):
         self.windows.append(window)
 
+    def removeWindow(self, window: GUIWindow):
+        self.windows.remove(window)
+
     def updateOnGameFrame(self):
         self.run()
 
