@@ -304,6 +304,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.keyboard = bge.logic.keyboard
         self.cursorRenderer = CursorRenderer(scene)
         self.cursorRenderer.addCursor()
+        self.show_cursor = True
         self.font_scaling_factor = 1
 
         # Check for RanGE so deltaTime can be updated
@@ -316,6 +317,9 @@ class BGEImguiRenderer(BGEPipelineRenderer):
 
     def getScreenSize(self):
         return self.savedDisplaySize
+
+    def setCursorVisible(self, show: bool):
+        self.show_cursor = show
 
     def _map_keys(self):
         key_map = self.io.key_map
@@ -434,7 +438,8 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         return newFont
 
     def drawCursor(self):
-        self.cursorRenderer.drawCursor()
+        if self.show_cursor:
+            self.cursorRenderer.drawCursor()
 
 
 def get_rgba_pixels(image: Image.Image):
