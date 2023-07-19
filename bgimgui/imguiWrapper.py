@@ -29,7 +29,7 @@ class BGEImguiWrapper:
 
     def drawGUI(self):
         for window in self.windows:
-            window.draw()
+            window.drawWindow()
 
     def run(self):
         backend = self.imgui_backend
