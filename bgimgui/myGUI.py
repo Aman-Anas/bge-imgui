@@ -1,6 +1,6 @@
 from .imguiWrapper import BGEImguiWrapper
 from . import widgets
-from .myCustomWindows import MyCustomHealthBarWindow
+from .myCustomWindows import MyCustomHealthBarWindow, MyTextWindow
 import bge
 import imgui
 import sys
@@ -19,6 +19,8 @@ class MyCustomGUI(BGEImguiWrapper):
         # style.colors[imgui.COLOR_TITLE_BACKGROUND] = (r, g, b, a)
         # style.colors[imgui.COLOR_TITLE_BACKGROUND_ACTIVE] = (r, g, b, a)
 
+        # You can also read in a file containing a saved style dict
+
     def initializeGUI(self):
         super().initializeGUI()
         io = imgui.get_io()
@@ -30,7 +32,8 @@ class MyCustomGUI(BGEImguiWrapper):
 
         backend = self.imgui_backend
 
-        font_global_scaling_factor = 1  # Set to 2 for high res displays?
+        # Set font global scaling factor to 2 for high res displays? (like retina)
+        font_global_scaling_factor = 1
         backend.setScalingFactors(font_global_scaling_factor)
 
         main_font_path = bge.logic.expandPath(
@@ -46,17 +49,19 @@ class MyCustomGUI(BGEImguiWrapper):
         self.show_test_window = True
         self.show_custom_window = True
 
-        # Add window objects
+        # Add window objects via addWindowToRender() like a retained mode GUI
         coolWindow = MyCustomHealthBarWindow("Cool Health Bar", io, 1000, 20)
+        self.addWindowToRender(coolWindow)
 
-        self.addWindow(coolWindow)
+        # Alternately, store them in the GUI and just render as necessary (Recommended method)
+        self.myTextWindow = MyTextWindow("potato", io)
 
         self.randomForegroundImage = widgets.ForegroundImage(
-            bge.logic.expandPath("//cursor.png"), rounding=5)
+            bge.logic.expandPath("//cursors/arrow.png"), rounding=5)
         self.randomForegroundImage.setImagePosition(100, 50)
 
         self.randomBackgroundImage = widgets.BackgroundImage(
-            bge.logic.expandPath("//cursor.png"))
+            bge.logic.expandPath("//cursors/resize.png"))
         self.randomBackgroundImage.setImagePosition(500, 500)
         self.randomBackgroundImage.setScale(0.2, 0.2)
 
@@ -77,12 +82,18 @@ class MyCustomGUI(BGEImguiWrapper):
                 imgui.end_menu()
             imgui.end_main_menu_bar()
 
-        # Draws all of the added window objects
+        # Draws all of the added window objects (somewhat like a retained mode)
         super().drawGUI()
+
+        # Draw a stored window
+        # You can also put this function call in a match-case statement to have one GUI
+        # with multiple modes (like LoginScreen, ConnectScreen, MainGame, etc)
+        # Or even use objects in a finite state machine
+        self.myTextWindow.drawWindow()
 
         screenWidth, screenHeight = backend.getScreenSize()
 
-        # Can draw procedurally here too
+        # Can draw windows procedurally here too (without any wrapper objects for windows)
         imgui.show_test_window()
 
         if self.show_custom_window:
