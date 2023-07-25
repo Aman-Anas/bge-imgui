@@ -6,11 +6,12 @@ import bge.logic
 
 
 class BGEImguiWrapper:
-    def __init__(self, scene: KX_Scene) -> None:
+    def __init__(self, scene: KX_Scene, cursorPath=None) -> None:
         bge.logic.gui = self
         self.imgui_context = imgui.create_context()
-        self.imgui_backend = BGEImguiRenderer(scene)
+        self.imgui_backend = BGEImguiRenderer(scene, cursorPath=cursorPath)
         self.windows: list[GUIWindow] = []
+        self.showCursor = True
 
         self.initializeGUI()
 
@@ -18,10 +19,10 @@ class BGEImguiWrapper:
         pass
         # For child classes to override
 
-    def addWindow(self, window: GUIWindow):
+    def addWindowToRender(self, window: GUIWindow):
         self.windows.append(window)
 
-    def removeWindow(self, window: GUIWindow):
+    def removeWindowFromRender(self, window: GUIWindow):
         self.windows.remove(window)
 
     def updateOnGameFrame(self):
@@ -41,7 +42,8 @@ class BGEImguiWrapper:
 
         self.drawGUI()
 
-        backend.drawCursor()
+        if self.showCursor:
+            backend.drawCursor()
 
         imgui.end_frame()
 
