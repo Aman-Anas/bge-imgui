@@ -42,3 +42,16 @@ class MyCustomHealthBarWindow(widgets.GUIWindow):
     def setLimits(self, min_health, max_health):
         self.min = min_health
         self.max = max_health
+
+
+class MyTextWindow(widgets.GUIWindow):
+    def __init__(self, name: str, io: imgui._IO, closable: bool = True, flags=None) -> None:
+        super().__init__(name, io, closable, flags)
+
+    def drawWindow(self):
+        pass  # Nothing specific
+        super().drawWindow()
+
+    def drawContents(self):
+        imgui.text_colored(
+            "Wow! This is a text box. Colored orange.", 1, 0.7, 0.7)
