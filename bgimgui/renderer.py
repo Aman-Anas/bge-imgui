@@ -9,6 +9,8 @@ from OpenGL import GL as gl
 import bgl
 import pathlib
 from PIL import Image
+import glob
+import os
 
 
 class BGEPipelineRenderer(BaseOpenGLRenderer):
@@ -291,7 +293,7 @@ BGE_KEY_EVENT_MAP = {
 
 
 class BGEImguiRenderer(BGEPipelineRenderer):
-    def __init__(self, scene, cursorFile=None):
+    def __init__(self, scene, cursorPath=None):
         self.scene = scene
         super().__init__(scene)
 
@@ -301,8 +303,9 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.mouse = bge.logic.mouse
         self.keyboard = bge.logic.keyboard
         self.cursorRenderer = CursorRenderer(scene)
-        self.cursorRenderer.addCursor(cursorFile)
+        self.cursorRenderer.addCursors(cursorPath)
         self.show_cursor = True
+        self.accept_input = True
         self.font_scaling_factor = 1
 
         # Check for RanGE so deltaTime can be updated
@@ -342,17 +345,22 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         io = imgui.get_io()
         # Run functions to execute once every game frame
         self.updateScreenSize()
-        self.updateMouse(io)
-        self.updateKeyboard(io)
 
-    def updateMouse(self, io):
+        if self.accept_input:
+            self.updateMousePos(io)
+            self.updateMouse(io)
+            self.updateKeyboard(io)
+
+    def updateMousePos(self, io):
         mouse = self.mouse
-
         pos = ((mouse.position[0] * self.io.display_size[0]),
                (mouse.position[1] * self.io.display_size[1]))
 
         io.mouse_pos = pos
         self.cursorRenderer.updateCursorInfo(self.savedDisplaySize[1], pos)
+
+    def updateMouse(self, io):
+        mouse = self.mouse
 
         activeMouseButtons = mouse.activeInputs
 
@@ -456,6 +464,7 @@ class CursorRenderer:
         self.height = 0
         self.cursorWidth = 25
         self.cursorHeight = 25
+        self.cursorDict = {}
 
     def setCursorSize(self, width: int, height: int):
         self.cursorWidth = width
@@ -465,28 +474,38 @@ class CursorRenderer:
         self.height = height
         self.mousePos = mousePos
 
-    def addCursor(self, filePath=None):
+    def addCursors(self, filePath=None):
         if not filePath:
-            filePath = bge.logic.expandPath("//cursor.png")
+            filePath = bge.logic.expandPath("//cursors")
 
-        self.path = pathlib.Path(filePath)
-        image = Image.open(self.path)
-        width, height = image.size
-        cursorPixels = get_rgba_pixels(image)
+        cursorList = glob.glob(filePath + '/**/*.png', recursive=True)
 
-        self.texture_id = gl.glGenTextures(1)
+        self.cursorDict = {}
 
-        gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture_id)
-        gl.glTexParameteri(
-            gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
-        gl.glTexParameteri(
-            gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-        gl.glTexParameteri(
-            gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_BORDER)
-        gl.glTexParameteri(
-            gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_BORDER)
-        gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, width,
-                        height, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, cursorPixels)
+        for cursorFile in cursorList:
+            path = pathlib.Path(cursorFile)
+            image = Image.open(path)
+            width, height = image.size
+            cursorPixels = get_rgba_pixels(image)
+
+            fileName = os.path.basename(path)
+            fileWithoutExtension = os.path.splitext(fileName)[0]
+
+            texID = gl.glGenTextures(1)
+
+            gl.glBindTexture(gl.GL_TEXTURE_2D, texID)
+            gl.glTexParameteri(
+                gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
+            gl.glTexParameteri(
+                gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
+            gl.glTexParameteri(
+                gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_BORDER)
+            gl.glTexParameteri(
+                gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_BORDER)
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, width,
+                            height, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, cursorPixels)
+
+            self.cursorDict[fileWithoutExtension] = texID
 
     def drawCursor(self):
         width = self.cursorWidth
@@ -498,7 +517,16 @@ class CursorRenderer:
         draw_list = imgui.get_foreground_draw_list()
         pos = x, y
         pos2 = (x + width, y + height)
-        draw_list.add_image(self.texture_id, pos, pos2)
+
+        match imgui.get_mouse_cursor():
+            case imgui.MOUSE_CURSOR_ARROW:
+                textureID = self.cursorDict["arrow"]
+            case imgui.MOUSE_CURSOR_RESIZE_NWSE:
+                textureID = self.cursorDict["resize"]
+            case _:
+                textureID = self.cursorDict["arrow"]
+
+        draw_list.add_image(textureID, pos, pos2)
 
 
 def get_common_gl_state():
