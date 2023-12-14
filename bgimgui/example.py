@@ -1,7 +1,7 @@
 from bge.types import SCA_PythonController
 import bge
 from .renderer import BGEImguiRenderer
-import imgui
+from imgui_bundle import imgui
 
 # Simple example script for running imgui without any wrappers (just the BGEImguiRenderer)
 
@@ -26,7 +26,7 @@ def runGUI(cont: SCA_PythonController):
         imgui.new_frame()
 
         # Draw windows and elements here
-        imgui.show_test_window()
+        imgui.show_demo_window()
 
         backend.drawCursor()
 

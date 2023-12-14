@@ -1,6 +1,6 @@
 from __future__ import annotations
 from . import widgets
-import imgui
+from imgui_bundle import imgui
 
 
 def mapRange(value, inMin, inMax, outMin, outMax):
@@ -9,11 +9,11 @@ def mapRange(value, inMin, inMax, outMin, outMax):
 
 class MyCustomHealthBarWindow(widgets.GUIWindow):
 
-    def __init__(self, name: str, io: imgui._IO, width: int, height: int) -> None:
-        flags = imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_TITLE_BAR
-        flags |= imgui.WINDOW_NO_RESIZE
-        flags |= imgui.WINDOW_ALWAYS_AUTO_RESIZE
-        flags |= imgui.WINDOW_NO_BACKGROUND
+    def __init__(self, name: str, io: imgui.IO, width: int, height: int) -> None:
+        flags = imgui.WindowFlags_.no_move | imgui.WindowFlags_.no_title_bar  # type: ignore
+        flags |= imgui.WindowFlags_.no_resize
+        flags |= imgui.WindowFlags_.always_auto_resize
+        flags |= imgui.WindowFlags_.no_background
         super().__init__(name, io, False, flags)
         self.health: float = 0.0
         self.min: float = 0.0
@@ -24,8 +24,8 @@ class MyCustomHealthBarWindow(widgets.GUIWindow):
 
     def drawWindow(self):
         display_size = self.io.display_size
-        imgui.set_next_window_position(
-            display_size.x * 0, display_size.y * 1, pivot_x=0, pivot_y=1)
+        imgui.set_next_window_pos(
+            imgui.ImVec2(display_size.x * 0, display_size.y * 1), pivot=imgui.ImVec2(0, 1))
         super().drawWindow()
 
     def drawContents(self):
@@ -45,7 +45,7 @@ class MyCustomHealthBarWindow(widgets.GUIWindow):
 
 
 class MyTextWindow(widgets.GUIWindow):
-    def __init__(self, name: str, io: imgui._IO, closable: bool = True, flags=None) -> None:
+    def __init__(self, name: str, io: imgui.IO, closable: bool = True, flags=None) -> None:
         super().__init__(name, io, closable, flags)
 
     def drawWindow(self):
@@ -53,5 +53,5 @@ class MyTextWindow(widgets.GUIWindow):
         super().drawWindow()
 
     def drawContents(self):
-        imgui.text_colored(
-            "Wow! This is a text box. Colored orange.", 1, 0.7, 0.7)
+        imgui.text_colored(imgui.ImColor(1, 0.7, 0.7).value,
+                           "Wow! This is a text box. Colored orange.")
