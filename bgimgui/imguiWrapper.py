@@ -1,4 +1,4 @@
-import imgui
+from imgui_bundle import imgui
 from .renderer import BGEImguiRenderer
 from .widgets import GUIWindow
 from bge.types import KX_Scene

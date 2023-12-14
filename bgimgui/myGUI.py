@@ -2,7 +2,7 @@ from .imguiWrapper import BGEImguiWrapper
 from . import widgets
 from .myCustomWindows import MyCustomHealthBarWindow, MyTextWindow
 import bge
-import imgui
+from imgui_bundle import imgui
 import sys
 
 
@@ -26,7 +26,7 @@ class MyCustomGUI(BGEImguiWrapper):
         io = imgui.get_io()
 
         # allow user to navigate UI with a keyboard
-        io.config_flags |= imgui.CONFIG_NAV_ENABLE_KEYBOARD
+        io.config_flags |= imgui.ConfigFlags_.nav_enable_keyboard
 
         self.styleGUI()
 
@@ -94,28 +94,29 @@ class MyCustomGUI(BGEImguiWrapper):
         screenWidth, screenHeight = backend.getScreenSize()
 
         # Can draw windows procedurally here too (without any wrapper objects for windows)
-        imgui.show_test_window()
+        imgui.show_demo_window()
 
         if self.show_custom_window:
 
             # Force set a window position
             # Pivot allows to modify the "center" position on the window
             # Where x=0 is the left and x=1 is the right
-            imgui.set_next_window_position(
-                screenWidth, screenHeight * 0.5, pivot_x=1, pivot_y=0.5)
+            imgui.set_next_window_pos(
+                imgui.ImVec2(screenWidth, screenHeight * 0.5), pivot=imgui.ImVec2(1, 0.5))
 
             is_expand, self.show_custom_window = imgui.begin(
-                "Custom window", True, flags=imgui.WINDOW_NO_MOVE | imgui.WINDOW_ALWAYS_AUTO_RESIZE | imgui.WINDOW_NO_TITLE_BAR)
+                "Custom window", True, flags=imgui.WindowFlags_.no_move | imgui.WindowFlags_.always_auto_resize | imgui.WindowFlags_.no_title_bar)
             if is_expand:
                 imgui.text("Bar")
-                imgui.text_colored("Eggs", 0.2, 1.0, 0.0)
+                imgui.text_colored(imgui.ImColor(0.2, 1.0, 0.0).value, "Eggs")
             imgui.end()
 
         if self.show_test_window:
             expand, self.show_test_window = imgui.begin("Default Window", True)
             if expand:
-                with imgui.font(self.extra_font):
-                    imgui.text("Text displayed using custom font")
+                imgui.push_font(self.extra_font)
+                imgui.text("Text displayed using custom font")
+                imgui.pop_font()
             imgui.end()
 
         self.randomForegroundImage.draw()

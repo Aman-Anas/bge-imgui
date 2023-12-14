@@ -1,9 +1,8 @@
-from imgui.integrations.base import BaseOpenGLRenderer
+from imgui_bundle.python_backends.base_backend import BaseOpenGLRenderer
 from bge.types import KX_Scene
-import imgui
+from imgui_bundle import imgui
 import ctypes
 import bge.logic
-import imgui
 import ctypes
 from OpenGL import GL as gl
 import bgl
@@ -70,7 +69,11 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         # save texture state
         last_texture = gl.glGetIntegerv(gl.GL_TEXTURE_BINDING_2D)
 
-        width, height, pixels = self.io.fonts.get_tex_data_as_rgba32()
+        # width, height, pixels = self.io.fonts.get_tex_data_as_rgba32()
+        font_matrix: np.ndarray = self.io.fonts.get_tex_data_as_rgba32()
+        width = font_matrix.shape[1]
+        height = font_matrix.shape[0]
+        pixels = font_matrix.data
 
         if self._font_texture is not None:
             gl.glDeleteTextures([self._font_texture])
@@ -82,10 +85,19 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
             gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
         gl.glTexParameteri(
             gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-        gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, width,
-                        height, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, pixels)
+        gl.glTexImage2D(
+            gl.GL_TEXTURE_2D,
+            0,
+            gl.GL_RGBA,
+            width,
+            height,
+            0,
+            gl.GL_RGBA,
+            gl.GL_UNSIGNED_BYTE,
+            pixels,
+        )
 
-        self.io.fonts.texture_id = self._font_texture
+        self.io.fonts.tex_id = self._font_texture
         gl.glBindTexture(gl.GL_TEXTURE_2D, last_texture)
         self.io.fonts.clear_tex_data()
 
@@ -166,17 +178,17 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         io = self.io
 
         display_width, display_height = io.display_size
-        fb_width = int(display_width * io.display_fb_scale[0])
-        fb_height = int(display_height * io.display_fb_scale[1])
+        fb_width = int(display_width * io.display_framebuffer_scale[0])
+        fb_height = int(display_height * io.display_framebuffer_scale[1])
 
         if fb_width == 0 or fb_height == 0:
             return
 
-        draw_data.scale_clip_rects(*io.display_fb_scale)
+        draw_data.scale_clip_rects(io.display_framebuffer_scale)
 
         # backup GL state
+        # todo: provide cleaner version of this backup-restore code
         common_gl_state_tuple = get_common_gl_state()
-
         last_program = gl.glGetIntegerv(gl.GL_CURRENT_PROGRAM)
         last_active_texture = gl.glGetIntegerv(gl.GL_ACTIVE_TEXTURE)
         last_array_buffer = gl.glGetIntegerv(gl.GL_ARRAY_BUFFER_BINDING)
@@ -196,10 +208,22 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         gl.glViewport(0, 0, int(fb_width), int(fb_height))
 
         ortho_projection = (ctypes.c_float * 16)(
-            2.0/display_width, 0.0,                   0.0, 0.0,
-            0.0,               2.0/-display_height,   0.0, 0.0,
-            0.0,               0.0,                  -1.0, 0.0,
-            -1.0,               1.0,                   0.0, 1.0
+            2.0 / display_width,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            2.0 / -display_height,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -1.0,
+            0.0,
+            -1.0,
+            1.0,
+            0.0,
+            1.0,
         )
 
         gl.glUseProgram(self._shader_handle)
@@ -208,21 +232,29 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
                               gl.GL_FALSE, ortho_projection)
         gl.glBindVertexArray(self._vao_handle)
 
-        for commands in draw_data.commands_lists:
+        for commands in draw_data.cmd_lists:
             idx_buffer_offset = 0
 
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._vbo_handle)
             # todo: check this (sizes)
-            gl.glBufferData(gl.GL_ARRAY_BUFFER, commands.vtx_buffer_size * imgui.VERTEX_SIZE,
-                            ctypes.c_void_p(commands.vtx_buffer_data), gl.GL_STREAM_DRAW)
+            gl.glBufferData(
+                gl.GL_ARRAY_BUFFER,
+                commands.vtx_buffer.size() * imgui.VERTEX_SIZE,
+                ctypes.c_void_p(commands.vtx_buffer.data_address()),
+                gl.GL_STREAM_DRAW,
+            )
 
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, self._elements_handle)
             # todo: check this (sizes)
-            gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, commands.idx_buffer_size *
-                            imgui.INDEX_SIZE, ctypes.c_void_p(commands.idx_buffer_data), gl.GL_STREAM_DRAW)
+            gl.glBufferData(
+                gl.GL_ELEMENT_ARRAY_BUFFER,
+                commands.idx_buffer.size() * imgui.INDEX_SIZE,
+                ctypes.c_void_p(commands.idx_buffer.data_address()),
+                gl.GL_STREAM_DRAW,
+            )
 
             # todo: allow to iterate over _CmdList
-            for command in commands.commands:
+            for command in commands.cmd_buffer:
                 gl.glBindTexture(gl.GL_TEXTURE_2D, command.texture_id)
 
                 # todo: use named tuple
@@ -235,8 +267,12 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
                 else:
                     gltype = gl.GL_UNSIGNED_INT
 
-                gl.glDrawElements(gl.GL_TRIANGLES, command.elem_count,
-                                  gltype, ctypes.c_void_p(idx_buffer_offset))
+                gl.glDrawElements(
+                    gl.GL_TRIANGLES,
+                    command.elem_count,
+                    gltype,
+                    ctypes.c_void_p(idx_buffer_offset),
+                )
 
                 idx_buffer_offset += command.elem_count * imgui.INDEX_SIZE
 
@@ -268,27 +304,27 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
 
 
 BGE_KEY_EVENT_MAP = {
-    bge.events.TABKEY: imgui.KEY_TAB,
-    bge.events.LEFTARROWKEY: imgui.KEY_LEFT_ARROW,
-    bge.events.RIGHTARROWKEY: imgui.KEY_RIGHT_ARROW,
-    bge.events.UPARROWKEY: imgui.KEY_UP_ARROW,
-    bge.events.DOWNARROWKEY: imgui.KEY_DOWN_ARROW,
-    bge.events.PAGEUPKEY: imgui.KEY_PAGE_UP,
-    bge.events.PAGEDOWNKEY: imgui.KEY_PAGE_DOWN,
-    bge.events.HOMEKEY: imgui.KEY_HOME,
-    bge.events.ENDKEY: imgui.KEY_END,
-    bge.events.INSERTKEY: imgui.KEY_INSERT,
-    bge.events.DELKEY: imgui.KEY_DELETE,
-    bge.events.BACKSPACEKEY: imgui.KEY_BACKSPACE,
-    bge.events.SPACEKEY: imgui.KEY_SPACE,
-    bge.events.ENTERKEY: imgui.KEY_ENTER,
-    bge.events.ESCKEY: imgui.KEY_ESCAPE,
-    bge.events.AKEY: imgui.KEY_A,
-    bge.events.CKEY: imgui.KEY_C,
-    bge.events.VKEY: imgui.KEY_V,
-    bge.events.XKEY: imgui.KEY_X,
-    bge.events.YKEY: imgui.KEY_Y,
-    bge.events.ZKEY: imgui.KEY_Z,
+    bge.events.TABKEY: imgui.Key.tab,
+    bge.events.LEFTARROWKEY: imgui.Key.left_arrow,
+    bge.events.RIGHTARROWKEY: imgui.Key.right_arrow,
+    bge.events.UPARROWKEY: imgui.Key.up_arrow,
+    bge.events.DOWNARROWKEY: imgui.Key.down_arrow,
+    bge.events.PAGEUPKEY: imgui.Key.page_up,
+    bge.events.PAGEDOWNKEY: imgui.Key.page_down,
+    bge.events.HOMEKEY: imgui.Key.home,
+    bge.events.ENDKEY: imgui.Key.end,
+    bge.events.INSERTKEY: imgui.Key.insert,
+    bge.events.DELKEY: imgui.Key.delete,
+    bge.events.BACKSPACEKEY: imgui.Key.backspace,
+    bge.events.SPACEKEY: imgui.Key.space,
+    bge.events.ENTERKEY: imgui.Key.enter,
+    bge.events.ESCKEY: imgui.Key.escape,
+    bge.events.AKEY: imgui.Key.a,
+    bge.events.CKEY: imgui.Key.c,
+    bge.events.VKEY: imgui.Key.v,
+    bge.events.XKEY: imgui.Key.x,
+    bge.events.YKEY: imgui.Key.y,
+    bge.events.ZKEY: imgui.Key.z,
 }
 
 
@@ -323,7 +359,8 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.show_cursor = show
 
     def _map_keys(self):
-        key_map = self.io.key_map
+        self.key_map = {}
+        key_map = self.key_map
         for bgeKey, imguiKey in BGE_KEY_EVENT_MAP.items():
             key_map[imguiKey] = bgeKey
 
@@ -359,7 +396,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         io.mouse_pos = pos
         self.cursorRenderer.updateCursorInfo(self.savedDisplaySize[1], pos)
 
-    def updateMouse(self, io):
+    def updateMouse(self, io: imgui.IO):
         mouse = self.mouse
 
         activeMouseButtons = mouse.activeInputs
@@ -390,16 +427,17 @@ class BGEImguiRenderer(BGEPipelineRenderer):
             # Update deltatime in range, may not be necessary
             io.delta_time = bge.logic.deltaTime()
 
-    def updateKeyboard(self, io):
+    def updateKeyboard(self, io: imgui.IO):
         keyboard = self.keyboard
         keyMap = BGE_KEY_EVENT_MAP
 
         for key, event in keyboard.inputs.items():
             if key in keyMap:
-                if event.active:
-                    io.keys_down[key] = True
-                else:
-                    io.keys_down[key] = False
+                io.add_key_event(keyMap[key], event.active)
+                # if event.active:
+                #     io.keys_down[key] = True
+                # else:
+                #     io.keys_down[key] = False
 
         activeKeys = keyboard.activeInputs
 
@@ -519,9 +557,9 @@ class CursorRenderer:
         pos2 = (x + width, y + height)
 
         match imgui.get_mouse_cursor():
-            case imgui.MOUSE_CURSOR_ARROW:
+            case imgui.MouseCursor_.arrow:
                 textureID = self.cursorDict["arrow"]
-            case imgui.MOUSE_CURSOR_RESIZE_NWSE:
+            case imgui.MouseCursor_.resize_nwse:
                 textureID = self.cursorDict["resize"]
             case _:
                 textureID = self.cursorDict["arrow"]

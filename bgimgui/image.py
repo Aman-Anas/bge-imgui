@@ -1,7 +1,7 @@
 from PIL import Image, ImageSequence, UnidentifiedImageError
 from OpenGL import GL as gl
 import pathlib
-import imgui
+from imgui_bundle import imgui
 
 _dummy_texture_id = None
 
@@ -155,23 +155,29 @@ class ImageHelper:
         return self.texture_ids[self.frame]
 
     def render(self, width: int, height: int, *args, **kwargs):
-        if imgui.is_rect_visible(width, height):
+        if imgui.is_rect_visible(imgui.ImVec2(width, height)):
             if "rounding" in kwargs:
                 flags = kwargs.pop("flags", None)
                 if flags is None:
-                    flags = imgui.DRAW_ROUND_CORNERS_ALL
+                    flags = imgui.ImDrawFlags_.round_corners_all
                 pos = imgui.get_cursor_screen_pos()
-                pos2 = (pos.x + width, pos.y + height)
+                pos2 = imgui.ImVec2(pos.x + width, pos.y + height)
                 draw_list = imgui.get_window_draw_list()
-                draw_list.add_image_rounded(self.texture_id, tuple(
-                    pos), pos2, *args, flags=flags, **kwargs)
-                imgui.dummy(width, height)
+                alpha_color = imgui.get_color_u32(
+                    imgui.ImVec4(1.0, 1.0, 1.0, 1.0))
+                draw_list.add_image_rounded(self.texture_id,
+                                            pos, pos2, imgui.ImVec2(
+                                                0, 0), imgui.ImVec2(1, 1),
+                                            alpha_color, *args, flags=flags.value, **kwargs)
+
+                imgui.dummy(imgui.ImVec2(width, height))
             else:
-                imgui.image(self.texture_id, width, height, *args, **kwargs)
+                imgui.image(self.texture_id, imgui.ImVec2(
+                    width, height), *args, **kwargs)
             return True
         else:
             # Skip if outside view
-            imgui.dummy(width, height)
+            imgui.dummy(imgui.ImVec2(width, height))
             return False
 
     def crop_to_ratio(self, ratio: int | float, fit=False):
@@ -203,32 +209,37 @@ class ForegroundImageHelper(ImageHelper):
         self.image_position = position
 
     def setImagePosition(self, x, y):
-        self.image_position = (x, y)
+        self.image_position = imgui.ImVec2(x, y)
 
     def render(self, width: int, height: int, *args, **kwargs):
-        if imgui.is_rect_visible(width, height):
+        if imgui.is_rect_visible(imgui.ImVec2(width, height)):
             position = self.image_position
             flags = kwargs.pop("flags", None)
             if "rounding" in kwargs:
                 if flags is None:
-                    flags = imgui.DRAW_ROUND_CORNERS_ALL
+                    flags = imgui.ImDrawFlags_.round_corners_all
                 pos = position
-                pos2 = (pos[0] + width, pos[1] + height)
+                pos2 = imgui.ImVec2(pos[0] + width, pos[1] + height)
+
                 draw_list = imgui.get_foreground_draw_list()
-                draw_list.add_image_rounded(self.texture_id, tuple(
-                    pos), pos2, *args, flags=flags, **kwargs)
+                alpha_color = imgui.get_color_u32(
+                    imgui.ImVec4(1.0, 1.0, 1.0, 1.0))
+                draw_list.add_image_rounded(self.texture_id,
+                                            pos, pos2, imgui.ImVec2(
+                                                0, 0), imgui.ImVec2(1, 1),
+                                            alpha_color, *args, flags=flags.value, **kwargs)
 
             else:
                 pos = position
-                pos2 = (pos[0] + width, pos[1] + height)
+                pos2 = imgui.ImVec2(pos[0] + width, pos[1] + height)
                 draw_list = imgui.get_foreground_draw_list()
-                draw_list.add_image(self.texture_id, tuple(
-                    pos), pos2, *args, **kwargs)
+                draw_list.add_image(self.texture_id, pos,
+                                    pos2, *args, **kwargs)
 
             return True
         else:
             # Skip if outside view
-            imgui.dummy(width, height)
+            imgui.dummy(imgui.ImVec2(width, height))
             return False
 
 
@@ -238,32 +249,35 @@ class BackgroundImageHelper(ImageHelper):
         self.image_position = position
 
     def setImagePosition(self, x, y):
-        self.image_position = (x, y)
+        self.image_position = imgui.ImVec2(x, y)
 
     def render(self, width: int, height: int, *args, **kwargs):
-        if imgui.is_rect_visible(width, height):
+        if imgui.is_rect_visible(imgui.ImVec2(width, height)):
             position = self.image_position
             flags = kwargs.pop("flags", None)
             if "rounding" in kwargs:
                 if flags is None:
-                    flags = imgui.DRAW_ROUND_CORNERS_ALL
+                    flags = imgui.ImDrawFlags_.round_corners_all
                 pos = position
-                pos2 = (pos[0] + width, pos[1] + height)
+                pos2 = imgui.ImVec2(pos[0] + width, pos[1] + height)
                 draw_list = imgui.get_background_draw_list()
-                draw_list.add_image_rounded(self.texture_id, tuple(
-                    pos), pos2, *args, flags=flags, **kwargs)
-
+                alpha_color = imgui.get_color_u32(
+                    imgui.ImVec4(1.0, 1.0, 1.0, 1.0))
+                draw_list.add_image_rounded(self.texture_id,
+                                            pos, pos2, imgui.ImVec2(
+                                                0, 0), imgui.ImVec2(1, 1),
+                                            alpha_color, *args, flags=flags.value, **kwargs)
             else:
                 pos = position
-                pos2 = (pos[0] + width, pos[1] + height)
+                pos2 = imgui.ImVec2(pos[0] + width, pos[1] + height)
                 draw_list = imgui.get_background_draw_list()
-                draw_list.add_image(self.texture_id, tuple(
-                    pos), pos2, *args, **kwargs)
+                draw_list.add_image(self.texture_id, pos,
+                                    pos2, *args, **kwargs)
 
             return True
         else:
             # Skip if outside view
-            imgui.dummy(width, height)
+            imgui.dummy(imgui.ImVec2(width, height))
             return False
 
 
@@ -283,71 +297,72 @@ if __name__ == "__main__":
     def draw_bounding_rect():
         draw_list = imgui.get_window_draw_list()
         draw_list.add_rect(*imgui.get_item_rect_min(), *imgui.get_item_rect_max(),
-                           imgui.get_color_u32_rgba(1, 1, 1, 1), thickness=2)
+                           imgui.get_color_u32(imgui.ImVec4(1, 1, 1, 1)), thickness=2)
 
     while True:  # Your main window draw loop
-        with imgui.begin("Example image"):
-            scaled_width = image.width / 6
-            scaled_height = image.height / 6
+        imgui.begin("Example image")
+        scaled_width = image.width / 6
+        scaled_height = image.height / 6
 
-            _, show_bounding_rect = imgui.checkbox(
-                "Show bounding rect", show_bounding_rect)
+        _, show_bounding_rect = imgui.checkbox(
+            "Show bounding rect", show_bounding_rect)
 
-            imgui.begin_group()
-            ratio = 3.0
-            imgui.text(f"Crop to ratio {ratio}:")
-            image.render(scaled_width, scaled_height /
-                         ratio, *image.crop_to_ratio(ratio))
-            if show_bounding_rect:
-                draw_bounding_rect()
+        imgui.begin_group()
+        ratio = 3.0
+        imgui.text(f"Crop to ratio {ratio}:")
+        image.render(scaled_width, scaled_height /
+                     ratio, *image.crop_to_ratio(ratio))
+        if show_bounding_rect:
+            draw_bounding_rect()
 
-            ratio = 0.3
-            imgui.text(f"Crop to ratio {ratio}:")
-            image.render(scaled_width * ratio, scaled_height,
-                         *image.crop_to_ratio(ratio))
-            if show_bounding_rect:
-                draw_bounding_rect()
+        ratio = 0.3
+        imgui.text(f"Crop to ratio {ratio}:")
+        image.render(scaled_width * ratio, scaled_height,
+                     *image.crop_to_ratio(ratio))
+        if show_bounding_rect:
+            draw_bounding_rect()
 
-            ratio = 2.0
-            imgui.text(f"Fit to ratio {ratio}:")
-            image.render(scaled_width, scaled_height / ratio,
-                         *image.crop_to_ratio(ratio, fit=True))
-            if show_bounding_rect:
-                draw_bounding_rect()
+        ratio = 2.0
+        imgui.text(f"Fit to ratio {ratio}:")
+        image.render(scaled_width, scaled_height / ratio,
+                     *image.crop_to_ratio(ratio, fit=True))
+        if show_bounding_rect:
+            draw_bounding_rect()
 
-            ratio = 0.4
-            imgui.text(f"Fit to ratio {ratio}:")
-            image.render(scaled_width * ratio, scaled_height,
-                         *image.crop_to_ratio(ratio, fit=True))
-            if show_bounding_rect:
-                draw_bounding_rect()
-            imgui.end_group()
+        ratio = 0.4
+        imgui.text(f"Fit to ratio {ratio}:")
+        image.render(scaled_width * ratio, scaled_height,
+                     *image.crop_to_ratio(ratio, fit=True))
+        if show_bounding_rect:
+            draw_bounding_rect()
+        imgui.end_group()
 
-            imgui.same_line(spacing=30)
+        imgui.same_line(spacing=30)
 
-            imgui.begin_group()
-            imgui.text("Scaled size:")
-            image.render(scaled_width, scaled_height)
-            if show_bounding_rect:
-                draw_bounding_rect()
+        imgui.begin_group()
+        imgui.text("Scaled size:")
+        image.render(scaled_width, scaled_height)
+        if show_bounding_rect:
+            draw_bounding_rect()
 
-            imgui.text("Rounded corners:")
-            image.render(scaled_width, scaled_height, rounding=26)
-            if show_bounding_rect:
-                draw_bounding_rect()
+        imgui.text("Rounded corners:")
+        image.render(scaled_width, scaled_height, rounding=26)
+        if show_bounding_rect:
+            draw_bounding_rect()
 
-            imgui.text("Some rounded corners:")
-            image.render(scaled_width, scaled_height, rounding=26,
-                         flags=imgui.DRAW_ROUND_CORNERS_TOP_LEFT | imgui.DRAW_ROUND_CORNERS_BOTTOM_RIGHT)
-            if show_bounding_rect:
-                draw_bounding_rect()
-            imgui.end_group()
+        imgui.text("Some rounded corners:")
+        image.render(scaled_width, scaled_height, rounding=26,
+                     flags=imgui.ImDrawFlags_.round_corners_top_left | imgui.ImDrawFlags_.round_corners_bottom_right)
+        if show_bounding_rect:
+            draw_bounding_rect()
+        imgui.end_group()
 
-            imgui.same_line(spacing=30)
+        imgui.same_line(spacing=30)
 
-            imgui.begin_group()
-            imgui.text("Actual size:")
-            image.render(image.width, image.height)
-            if show_bounding_rect:
-                draw_bounding_rect()
-            imgui.end_group()
+        imgui.begin_group()
+        imgui.text("Actual size:")
+        image.render(image.width, image.height)
+        if show_bounding_rect:
+            draw_bounding_rect()
+        imgui.end_group()
+        imgui.end()

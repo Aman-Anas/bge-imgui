@@ -1,14 +1,14 @@
 from __future__ import annotations
 from .image import ImageHelper, ForegroundImageHelper, BackgroundImageHelper
 import os
-import imgui
+from imgui_bundle import imgui
 import bge.logic
 
 
 def draw_bounding_rect():
     draw_list = imgui.get_window_draw_list()
     draw_list.add_rect(*imgui.get_item_rect_min(), *imgui.get_item_rect_max(),
-                       imgui.get_color_u32_rgba(1, 1, 1, 1), thickness=2)
+                       imgui.get_color_u32(imgui.ImVec4(1, 1, 1, 1)), thickness=2)
 
 
 class ImageWidget:
@@ -104,7 +104,7 @@ class BackgroundImage(ImageWidget):
 
 
 class GUIWindow:
-    def __init__(self, name: str, io: imgui._IO, closable: bool = True, flags=None) -> None:
+    def __init__(self, name: str, io: imgui.IO, closable: bool = True, flags=None) -> None:
         super().__init__()
         self.name = name
         self.closable = closable
@@ -126,7 +126,7 @@ class GUIWindow:
     def drawWindow(self):
         if self.show:
             is_expand, self.show = imgui.begin(
-                self.name, closable=self.closable, flags=self.flags)
+                self.name, p_open=self.closable, flags=self.flags)
             if is_expand:
                 self.drawContents()
             imgui.end()
