@@ -55,3 +55,11 @@ class MyTextWindow(widgets.GUIWindow):
     def drawContents(self):
         imgui.text_colored(imgui.ImColor(1, 0.7, 0.7).value,
                            "Wow! This is a text box. Colored orange.")
+        modal = imgui.button("open")
+        if modal:
+            imgui.open_popup("wao")
+
+        is_expand, _, = imgui.begin_popup_modal("wao", True)
+        if is_expand:
+            imgui.text("hi")
+            imgui.end_popup()

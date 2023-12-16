@@ -10,15 +10,15 @@ if TYPE_CHECKING:
 def getDirection(direction: str):
     match direction:
         case "Left":
-            return imgui.DIRECTION_LEFT
+            return imgui.Dir_.left
         case "Right":
-            return imgui.DIRECTION_RIGHT
+            return imgui.Dir_.right
         case "Up":
-            return imgui.DIRECTION_UP
+            return imgui.Dir_.up
         case "Down":
-            return imgui.DIRECTION_DOWN
+            return imgui.Dir_.down
         case _:
-            return imgui.DIRECTION_NONE
+            return imgui.Dir_.none
 
 
 def styleGUI(styleConfigPath: str):
@@ -72,57 +72,77 @@ def styleGUI(styleConfigPath: str):
     colorData = {color: fixColorRange(
         colorData[color], 255.0) for color in colorData}
 
-    colors = style.colors
-
-    colors[imgui.COLOR_TEXT] = colorData["Text"]
-    colors[imgui.COLOR_TEXT_DISABLED] = colorData["TextDisabled"]
-    colors[imgui.COLOR_WINDOW_BACKGROUND] = colorData["WindowBg"]
-    colors[imgui.COLOR_CHILD_BACKGROUND] = colorData["ChildBg"]
-    colors[imgui.COLOR_POPUP_BACKGROUND] = colorData["PopupBg"]
-    colors[imgui.COLOR_BORDER] = colorData["Border"]
-    colors[imgui.COLOR_BORDER_SHADOW] = colorData["BorderShadow"]
-    colors[imgui.COLOR_FRAME_BACKGROUND] = colorData["FrameBg"]
-    colors[imgui.COLOR_FRAME_BACKGROUND_HOVERED] = colorData["FrameBgHovered"]
-    colors[imgui.COLOR_FRAME_BACKGROUND_ACTIVE] = colorData["FrameBgActive"]
-    colors[imgui.COLOR_TITLE_BACKGROUND] = colorData["TitleBg"]
-    colors[imgui.COLOR_TITLE_BACKGROUND_ACTIVE] = colorData["TitleBgActive"]
-    colors[imgui.COLOR_TITLE_BACKGROUND_COLLAPSED] = colorData["TitleBgCollapsed"]
-    colors[imgui.COLOR_MENUBAR_BACKGROUND] = colorData["MenuBarBg"]
-    colors[imgui.COLOR_SCROLLBAR_BACKGROUND] = colorData["ScrollbarBg"]
-    colors[imgui.COLOR_SCROLLBAR_GRAB] = colorData["ScrollbarGrab"]
-    colors[imgui.COLOR_SCROLLBAR_GRAB_HOVERED] = colorData["ScrollbarGrabHovered"]
-    colors[imgui.COLOR_SCROLLBAR_GRAB_ACTIVE] = colorData["ScrollbarGrabActive"]
-    colors[imgui.COLOR_CHECK_MARK] = colorData["CheckMark"]
-    colors[imgui.COLOR_SLIDER_GRAB] = colorData["SliderGrab"]
-    colors[imgui.COLOR_BUTTON] = colorData["Button"]
-    colors[imgui.COLOR_BUTTON_HOVERED] = colorData["ButtonHovered"]
-    colors[imgui.COLOR_BUTTON_ACTIVE] = colorData["ButtonActive"]
-    colors[imgui.COLOR_HEADER] = colorData["Header"]
-    colors[imgui.COLOR_HEADER_HOVERED] = colorData["HeaderHovered"]
-    colors[imgui.COLOR_HEADER_ACTIVE] = colorData["HeaderActive"]
-    colors[imgui.COLOR_SEPARATOR] = colorData["Separator"]
-    colors[imgui.COLOR_SEPARATOR_HOVERED] = colorData["SeparatorHovered"]
-    colors[imgui.COLOR_SEPARATOR_ACTIVE] = colorData["SeparatorActive"]
-    colors[imgui.COLOR_RESIZE_GRIP] = colorData["ResizeGrip"]
-    colors[imgui.COLOR_RESIZE_GRIP_HOVERED] = colorData["ResizeGripHovered"]
-    colors[imgui.COLOR_RESIZE_GRIP_ACTIVE] = colorData["ResizeGripActive"]
-    colors[imgui.COLOR_TAB] = colorData["Tab"]
-    colors[imgui.COLOR_TAB_HOVERED] = colorData["TabHovered"]
-    colors[imgui.COLOR_TAB_ACTIVE] = colorData["TabActive"]
-    colors[imgui.COLOR_TAB_UNFOCUSED] = colorData["TabUnfocused"]
-    colors[imgui.COLOR_TAB_UNFOCUSED_ACTIVE] = colorData["TabUnfocusedActive"]
-    colors[imgui.COLOR_PLOT_LINES] = colorData["PlotLines"]
-    colors[imgui.COLOR_PLOT_LINES_HOVERED] = colorData["PlotLinesHovered"]
-    colors[imgui.COLOR_PLOT_HISTOGRAM] = colorData["PlotHistogram"]
-    colors[imgui.COLOR_PLOT_HISTOGRAM_HOVERED] = colorData["PlotHistogramHovered"]
-    colors[imgui.COLOR_TABLE_HEADER_BACKGROUND] = colorData["TableHeaderBg"]
-    colors[imgui.COLOR_TABLE_BORDER_STRONG] = colorData["TableBorderStrong"]
-    colors[imgui.COLOR_TABLE_BORDER_LIGHT] = colorData["TableBorderLight"]
-    colors[imgui.COLOR_TABLE_ROW_BACKGROUND] = colorData["TableRowBg"]
-    colors[imgui.COLOR_TABLE_ROW_BACKGROUND_ALT] = colorData["TableRowBgAlt"]
-    colors[imgui.COLOR_TEXT_SELECTED_BACKGROUND] = colorData["TextSelectedBg"]
-    colors[imgui.COLOR_DRAG_DROP_TARGET] = colorData["DragDropTarget"]
-    colors[imgui.COLOR_NAV_HIGHLIGHT] = colorData["NavHighlight"]
-    colors[imgui.COLOR_NAV_WINDOWING_HIGHLIGHT] = colorData["NavWindowingHighlight"]
-    colors[imgui.COLOR_NAV_WINDOWING_DIM_BACKGROUND] = colorData["NavWindowingDimBg"]
-    colors[imgui.COLOR_MODAL_WINDOW_DIM_BACKGROUND] = colorData["ModalWindowDimBg"]
+    style.set_color_(imgui.Col_.text, colorData["Text"])
+    style.set_color_(imgui.Col_.text_disabled, colorData["TextDisabled"])
+    style.set_color_(imgui.Col_.window_bg, colorData["WindowBg"])
+    style.set_color_(imgui.Col_.child_bg, colorData["ChildBg"])
+    style.set_color_(imgui.Col_.popup_bg, colorData["PopupBg"])
+    style.set_color_(imgui.Col_.border, colorData["Border"])
+    style.set_color_(imgui.Col_.border_shadow, colorData["BorderShadow"])
+    style.set_color_(imgui.Col_.frame_bg, colorData["FrameBg"])
+    style.set_color_(imgui.Col_.frame_bg_hovered,
+                     colorData["FrameBgHovered"])
+    style.set_color_(imgui.Col_.frame_bg_active,
+                     colorData["FrameBgActive"])
+    style.set_color_(imgui.Col_.title_bg, colorData["TitleBg"])
+    style.set_color_(imgui.Col_.title_bg_active,
+                     colorData["TitleBgActive"])
+    style.set_color_(imgui.Col_.title_bg_collapsed,
+                     colorData["TitleBgCollapsed"])
+    style.set_color_(imgui.Col_.menu_bar_bg, colorData["MenuBarBg"])
+    style.set_color_(imgui.Col_.scrollbar_bg,
+                     colorData["ScrollbarBg"])
+    style.set_color_(imgui.Col_.scrollbar_grab, colorData["ScrollbarGrab"])
+    style.set_color_(imgui.Col_.scrollbar_grab_hovered,
+                     colorData["ScrollbarGrabHovered"])
+    style.set_color_(imgui.Col_.scrollbar_grab_active,
+                     colorData["ScrollbarGrabActive"])
+    style.set_color_(imgui.Col_.check_mark, colorData["CheckMark"])
+    style.set_color_(imgui.Col_.slider_grab, colorData["SliderGrab"])
+    style.set_color_(imgui.Col_.button, colorData["Button"])
+    style.set_color_(imgui.Col_.button_hovered, colorData["ButtonHovered"])
+    style.set_color_(imgui.Col_.button_active, colorData["ButtonActive"])
+    style.set_color_(imgui.Col_.header, colorData["Header"])
+    style.set_color_(imgui.Col_.header_hovered, colorData["HeaderHovered"])
+    style.set_color_(imgui.Col_.header_active, colorData["HeaderActive"])
+    style.set_color_(imgui.Col_.separator, colorData["Separator"])
+    style.set_color_(imgui.Col_.separator_hovered,
+                     colorData["SeparatorHovered"])
+    style.set_color_(imgui.Col_.separator_active,
+                     colorData["SeparatorActive"])
+    style.set_color_(imgui.Col_.resize_grip, colorData["ResizeGrip"])
+    style.set_color_(imgui.Col_.resize_grip_hovered,
+                     colorData["ResizeGripHovered"])
+    style.set_color_(imgui.Col_.resize_grip_active,
+                     colorData["ResizeGripActive"])
+    style.set_color_(imgui.Col_.tab, colorData["Tab"])
+    style.set_color_(imgui.Col_.tab_hovered, colorData["TabHovered"])
+    style.set_color_(imgui.Col_.tab_active, colorData["TabActive"])
+    style.set_color_(imgui.Col_.tab_unfocused, colorData["TabUnfocused"])
+    style.set_color_(imgui.Col_.tab_unfocused_active,
+                     colorData["TabUnfocusedActive"])
+    style.set_color_(imgui.Col_.plot_lines, colorData["PlotLines"])
+    style.set_color_(imgui.Col_.plot_lines_hovered,
+                     colorData["PlotLinesHovered"])
+    style.set_color_(imgui.Col_.plot_histogram, colorData["PlotHistogram"])
+    style.set_color_(imgui.Col_.plot_histogram_hovered,
+                     colorData["PlotHistogramHovered"])
+    style.set_color_(imgui.Col_.table_header_bg,
+                     colorData["TableHeaderBg"])
+    style.set_color_(imgui.Col_.table_border_strong,
+                     colorData["TableBorderStrong"])
+    style.set_color_(imgui.Col_.table_border_light,
+                     colorData["TableBorderLight"])
+    style.set_color_(imgui.Col_.table_row_bg, colorData["TableRowBg"])
+    style.set_color_(imgui.Col_.table_row_bg_alt,
+                     colorData["TableRowBgAlt"])
+    style.set_color_(imgui.Col_.text_selected_bg,
+                     colorData["TextSelectedBg"])
+    style.set_color_(imgui.Col_.drag_drop_target, colorData["DragDropTarget"])
+    style.set_color_(imgui.Col_.nav_highlight, colorData["NavHighlight"])
+    style.set_color_(imgui.Col_.nav_windowing_highlight,
+                     colorData["NavWindowingHighlight"])
+    style.set_color_(imgui.Col_.nav_windowing_dim_bg,
+                     colorData["NavWindowingDimBg"])
+    style.set_color_(imgui.Col_.modal_window_dim_bg,
+                     colorData["ModalWindowDimBg"])

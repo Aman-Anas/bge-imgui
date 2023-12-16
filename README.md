@@ -1,5 +1,5 @@
 # bge-imgui
-Integrate pyimgui with the Blender Game Engine (and variants)
+Integrate imgui_bundle with the Blender Game Engine (and variants)
 Currently works with RanGE engine, UPBGE 0.2.5, and UPBGE 0.4+.
 
 # Usage
@@ -8,10 +8,10 @@ Not much documentation, but there are some comments in the python scripts
 and some example files to help you.
 
 To make a custom GUI for your game, extend BGEImguiWrapper class and 
-override the initializeGUI() and drawGUI() methods. 
+override the setup_gui() and draw() methods. 
 An example is shown in `myGUI.py`, and a usage example in `main.py`.
 
-> If you just want a simple example for how to use pyimgui, refer to `example.py`.
+> If you just want a simple example for how to use imgui_bundle/pyimgui, refer to `example.py`.
 
 For both UPBGE and RanGE, the example's logic bricks look roughly like this:
 

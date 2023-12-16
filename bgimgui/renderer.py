@@ -259,7 +259,7 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
                     gl.GL_TRIANGLES,
                     command.elem_count,
                     gltype,
-                    ctypes.c_void_p(idx_buffer_offset),
+                    ctypes.c_void_p(command.idx_offset * imgui.INDEX_SIZE)
                 )
 
                 idx_buffer_offset += command.elem_count * imgui.INDEX_SIZE

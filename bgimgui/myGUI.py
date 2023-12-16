@@ -1,10 +1,11 @@
 from bge.types import KX_Scene
-from .imguiWrapper import BGEImguiWrapper
+from .imgui_wrapper import BGEImguiWrapper
 from . import widgets
 from .myCustomWindows import MyCustomHealthBarWindow, MyTextWindow
 import bge
 from imgui_bundle import imgui
 import sys
+from .gui_style import styleGUI
 
 
 class MyCustomGUI(BGEImguiWrapper):
@@ -12,6 +13,7 @@ class MyCustomGUI(BGEImguiWrapper):
 
     def styleGUI(self):
         pass
+        # styleGUI(bge.logic.expandPath("//ui_style.toml"))
         # Example for how to style GUI
         # style = imgui.get_style() # override active style
         # imgui.style_colors_dark(style) # optional: set base colors from "Dark" (or any other) style
