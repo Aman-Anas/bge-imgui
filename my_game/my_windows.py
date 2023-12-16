@@ -1,5 +1,5 @@
 from __future__ import annotations
-from . import widgets
+from .bgimgui import widgets
 from imgui_bundle import imgui
 
 
