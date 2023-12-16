@@ -1,3 +1,4 @@
+from bge.types import KX_Scene
 from .imguiWrapper import BGEImguiWrapper
 from . import widgets
 from .myCustomWindows import MyCustomHealthBarWindow, MyTextWindow
@@ -21,8 +22,7 @@ class MyCustomGUI(BGEImguiWrapper):
 
         # You can also read in a file containing a saved style dict
 
-    def initializeGUI(self):
-        super().initializeGUI()
+    def setup_gui(self):
         io = imgui.get_io()
 
         # allow user to navigate UI with a keyboard
@@ -30,31 +30,28 @@ class MyCustomGUI(BGEImguiWrapper):
 
         self.styleGUI()
 
-        backend = self.imgui_backend
+        backend = self.backend
 
         # Set font global scaling factor to 2 for high res displays? (like retina)
         font_global_scaling_factor = 1
-        backend.setScalingFactors(font_global_scaling_factor)
+        backend.set_scaling_factors(font_global_scaling_factor)
 
         main_font_path = bge.logic.expandPath(
             "//Orbitron-VariableFont_wght.ttf")
         main_font_size_in_pixels = 20
-        backend.setMainFont(main_font_path, main_font_size_in_pixels)
+        backend.set_main_font(main_font_path, main_font_size_in_pixels)
 
         extra_font_path = bge.logic.expandPath("//Blackout 2 AM.ttf")
         extra_font_size = 40
-        self.extra_font = backend.addExtraFont(
+        self.extra_font = backend.add_extra_font(
             extra_font_path, extra_font_size)
 
         self.show_test_window = True
         self.show_custom_window = True
 
-        # Add window objects via addWindowToRender() like a retained mode GUI
-        coolWindow = MyCustomHealthBarWindow("Cool Health Bar", io, 1000, 20)
-        self.addWindowToRender(coolWindow)
-
         # Alternately, store them in the GUI and just render as necessary (Recommended method)
         self.myTextWindow = MyTextWindow("potato", io)
+        self.bar = MyCustomHealthBarWindow("Cool bar", io, 500, 20)
 
         self.randomForegroundImage = widgets.ForegroundImage(
             bge.logic.expandPath("//cursors/arrow.png"), rounding=5)
@@ -65,8 +62,8 @@ class MyCustomGUI(BGEImguiWrapper):
         self.randomBackgroundImage.setImagePosition(500, 500)
         self.randomBackgroundImage.setScale(0.2, 0.2)
 
-    def drawGUI(self):
-        backend = self.imgui_backend
+    def draw(self):
+        backend = self.backend
 
         # Draw Menu Bar
         if imgui.begin_main_menu_bar():
@@ -82,16 +79,15 @@ class MyCustomGUI(BGEImguiWrapper):
                 imgui.end_menu()
             imgui.end_main_menu_bar()
 
-        # Draws all of the added window objects (somewhat like a retained mode)
-        super().drawGUI()
-
         # Draw a stored window
         # You can also put this function call in a match-case statement to have one GUI
         # with multiple modes (like LoginScreen, ConnectScreen, MainGame, etc)
         # Or even use objects in a finite state machine
         self.myTextWindow.drawWindow()
 
-        screenWidth, screenHeight = backend.getScreenSize()
+        self.bar.drawWindow()
+
+        screenWidth, screenHeight = backend.get_screen_size()
 
         # Can draw windows procedurally here too (without any wrapper objects for windows)
         imgui.show_demo_window()
@@ -102,7 +98,7 @@ class MyCustomGUI(BGEImguiWrapper):
             # Pivot allows to modify the "center" position on the window
             # Where x=0 is the left and x=1 is the right
             imgui.set_next_window_pos(
-                imgui.ImVec2(screenWidth, screenHeight * 0.5), pivot=imgui.ImVec2(1, 0.5))
+                (screenWidth, screenHeight * 0.5), pivot=(1, 0.5))
 
             is_expand, self.show_custom_window = imgui.begin(
                 "Custom window", True, flags=imgui.WindowFlags_.no_move | imgui.WindowFlags_.always_auto_resize | imgui.WindowFlags_.no_title_bar)

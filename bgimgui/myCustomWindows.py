@@ -10,7 +10,7 @@ def mapRange(value, inMin, inMax, outMin, outMax):
 class MyCustomHealthBarWindow(widgets.GUIWindow):
 
     def __init__(self, name: str, io: imgui.IO, width: int, height: int) -> None:
-        flags = imgui.WindowFlags_.no_move | imgui.WindowFlags_.no_title_bar  # type: ignore
+        flags = imgui.WindowFlags_.no_move | imgui.WindowFlags_.no_title_bar
         flags |= imgui.WindowFlags_.no_resize
         flags |= imgui.WindowFlags_.always_auto_resize
         flags |= imgui.WindowFlags_.no_background
@@ -25,7 +25,7 @@ class MyCustomHealthBarWindow(widgets.GUIWindow):
     def drawWindow(self):
         display_size = self.io.display_size
         imgui.set_next_window_pos(
-            imgui.ImVec2(display_size.x * 0, display_size.y * 1), pivot=imgui.ImVec2(0, 1))
+            (display_size.x * 0, display_size.y * 1), pivot=(0, 1))
         super().drawWindow()
 
     def drawContents(self):

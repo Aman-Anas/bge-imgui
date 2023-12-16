@@ -1,54 +1,46 @@
 from imgui_bundle import imgui
-from .renderer import BGEImguiRenderer
-from .widgets import GUIWindow
+
 from bge.types import KX_Scene
 import bge.logic
 
+from .renderer import BGEImguiRenderer
+
 
 class BGEImguiWrapper:
-    def __init__(self, scene: KX_Scene, cursorPath=None) -> None:
+    def __init__(self, scene: KX_Scene, cursor_path=None) -> None:
         bge.logic.gui = self
-        self.imgui_context = imgui.create_context()
-        self.imgui_backend = BGEImguiRenderer(scene, cursorPath=cursorPath)
-        self.windows: list[GUIWindow] = []
-        self.showCursor = True
+        self.context = imgui.create_context()
+        self.backend = BGEImguiRenderer(scene, cursor_path=cursor_path)
 
-        self.initializeGUI()
+        self.io = self.backend.io
+        self.io.config_flags |= imgui.ConfigFlags_.docking_enable
 
-    def initializeGUI(self):
-        pass
+        self.setup_gui()
+
+    def setup_gui(self) -> None:
         # For child classes to override
+        raise NotImplementedError
 
-    def addWindowToRender(self, window: GUIWindow):
-        self.windows.append(window)
+    def draw(self) -> None:
+        # For child classes to override
+        raise NotImplementedError
 
-    def removeWindowFromRender(self, window: GUIWindow):
-        self.windows.remove(window)
-
-    def updateOnGameFrame(self):
-        self.run()
-
-    def drawGUI(self):
-        for window in self.windows:
-            window.drawWindow()
-
-    def run(self):
-        backend = self.imgui_backend
+    def update_gui(self):
+        backend = self.backend
 
         # Update inputs like mouse/keyboard
-        backend.updateIO()
+        backend.update_io()
 
         imgui.new_frame()
 
-        self.drawGUI()
+        self.draw()
 
-        if self.showCursor:
-            backend.drawCursor()
+        backend.draw_cursor()
 
         imgui.end_frame()
 
         imgui.render()
         backend.render(imgui.get_draw_data())
 
-    def shutdownGUI(self):
-        self.imgui_backend.shutdown()
+    def shutdown_gui(self):
+        self.backend.shutdown()
