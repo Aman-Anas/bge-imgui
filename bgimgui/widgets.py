@@ -125,8 +125,13 @@ class GUIWindow:
 
     def drawWindow(self):
         if self.show:
-            is_expand, self.show = imgui.begin(
-                self.name, p_open=self.closable, flags=self.flags)
+            if self.closable:
+                is_expand, self.show = imgui.begin(
+                    self.name, True, flags=self.flags)
+            else:
+                is_expand, _ = imgui.begin(
+                    self.name, None, flags=self.flags)
+
             if is_expand:
                 self.drawContents()
             imgui.end()

@@ -10,9 +10,11 @@ def startGUI(cont: SCA_PythonController):
     if cont.sensors["tap"].positive:
         own = cont.owner
         context = imgui.create_context()
-        imgui_backend = BGEImguiRenderer(own.scene)
+        imgui_backend = BGEImguiRenderer(
+            own.scene, bge.logic.expandPath("//cursors"))
         own["context"] = context
         own["backend"] = imgui_backend
+        own["showW"] = True
 
 
 def runGUI(cont: SCA_PythonController):
@@ -21,14 +23,14 @@ def runGUI(cont: SCA_PythonController):
         backend: BGEImguiRenderer = own["backend"]
 
         # Update inputs like mouse/keyboard
-        backend.updateIO()
+        backend.update_io()
 
         imgui.new_frame()
 
         # Draw windows and elements here
         imgui.show_demo_window()
 
-        backend.drawCursor()
+        backend.draw_cursor()
 
         imgui.end_frame()
 

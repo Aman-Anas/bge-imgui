@@ -1,15 +1,17 @@
 from imgui_bundle.python_backends.base_backend import BaseOpenGLRenderer
-from bge.types import KX_Scene
 from imgui_bundle import imgui
-import ctypes
+
+from bge.types import KX_Scene
 import bge.logic
+
 import ctypes
-from OpenGL import GL as gl
-import bgl
-import pathlib
-from PIL import Image
 import glob
 import os
+import pathlib
+
+from OpenGL import GL as gl
+from PIL import Image
+import numpy as np
 
 
 class BGEPipelineRenderer(BaseOpenGLRenderer):
@@ -63,7 +65,7 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         self.data = None
 
         super(BGEPipelineRenderer, self).__init__()
-        self.scene.post_draw.append(self.renderCall)
+        self.scene.post_draw.append(self.render_call)
 
     def refresh_font_texture(self):
         # save texture state
@@ -163,15 +165,13 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         pass
 
     def render(self, draw_data):
-
+        # Since we are rendering in the post_draw callback, simply update the draw data
         self.data = draw_data
-        # if self.renderCall not in self.scene.post_draw:
 
-        # time.sleep(sys.float_info.epsilon)
-
-    def renderCall(self):
+    def render_call(self):
         if self.data is None:
             return
+
         draw_data = self.data
 
         # perf: local for faster access
@@ -208,22 +208,10 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         gl.glViewport(0, 0, int(fb_width), int(fb_height))
 
         ortho_projection = (ctypes.c_float * 16)(
-            2.0 / display_width,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            2.0 / -display_height,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            -1.0,
-            0.0,
-            -1.0,
-            1.0,
-            0.0,
-            1.0,
+            2.0 / display_width, 0.0,                    0.0, 0.0,
+            0.0,                2.0 / -display_height,  0.0, 0.0,
+            0.0,                0.0,                   -1.0, 0.0,
+            -1.0,                1.0,                    0.0, 1.0,
         )
 
         gl.glUseProgram(self._shader_handle)
@@ -325,22 +313,47 @@ BGE_KEY_EVENT_MAP = {
     bge.events.XKEY: imgui.Key.x,
     bge.events.YKEY: imgui.Key.y,
     bge.events.ZKEY: imgui.Key.z,
+
+    # Modifiers
+    bge.events.LEFTCTRLKEY: imgui.Key.left_ctrl,
+    bge.events.RIGHTCTRLKEY: imgui.Key.right_ctrl,
+    bge.events.LEFTALTKEY: imgui.Key.left_alt,
+    bge.events.RIGHTALTKEY: imgui.Key.right_alt,
+    bge.events.LEFTSHIFTKEY: imgui.Key.left_shift,
+    bge.events.RIGHTSHIFTKEY: imgui.Key.right_shift,
+}
+
+BGE_MODIFIER_EVENT_MAP = {
+    bge.events.LEFTCTRLKEY: imgui.Key.im_gui_mod_ctrl,
+    bge.events.RIGHTCTRLKEY: imgui.Key.im_gui_mod_ctrl,
+    bge.events.LEFTALTKEY: imgui.Key.im_gui_mod_alt,
+    bge.events.RIGHTALTKEY: imgui.Key.im_gui_mod_alt,
+    bge.events.LEFTSHIFTKEY: imgui.Key.im_gui_mod_shift,
+    bge.events.RIGHTSHIFTKEY: imgui.Key.im_gui_mod_shift,
 }
 
 
 class BGEImguiRenderer(BGEPipelineRenderer):
-    def __init__(self, scene, cursorPath=None):
+    def __init__(self, scene, cursor_path=None):
         self.scene = scene
         super().__init__(scene)
 
-        self.savedDisplaySize = bge.render.getWindowWidth(), bge.render.getWindowHeight()
-        self.io.display_size = self.savedDisplaySize[0], self.savedDisplaySize[1]
+        width, height = bge.render.getWindowWidth(), bge.render.getWindowHeight()
+
+        self.saved_disp_size = width, height
+        self.io.display_size = width, height
 
         self.mouse = bge.logic.mouse
         self.keyboard = bge.logic.keyboard
-        self.cursorRenderer = CursorRenderer(scene)
-        self.cursorRenderer.addCursors(cursorPath)
-        self.show_cursor = True
+
+        self.cursor_renderer = CursorRenderer(scene)
+
+        if not cursor_path:
+            self.show_cursor = False
+        else:
+            self.cursor_renderer.add_cursors(cursor_path)
+            self.show_cursor = True
+
         self.accept_input = True
         self.font_scaling_factor = 1
 
@@ -352,109 +365,86 @@ class BGEImguiRenderer(BGEPipelineRenderer):
 
         self._map_keys()
 
-    def getScreenSize(self):
-        return self.savedDisplaySize
+    def get_screen_size(self):
+        return self.saved_disp_size
 
-    def setCursorVisible(self, show: bool):
+    def set_cursor_visible(self, show: bool):
         self.show_cursor = show
 
     def _map_keys(self):
-        self.key_map = {}
-        key_map = self.key_map
-        for bgeKey, imguiKey in BGE_KEY_EVENT_MAP.items():
-            key_map[imguiKey] = bgeKey
+        self.key_map = BGE_KEY_EVENT_MAP.copy()
+        self.modifier_map = BGE_MODIFIER_EVENT_MAP.copy()
 
-    def updateScreenSize(self):
+    def update_screen_size(self):
         width = bge.render.getWindowWidth()
         height = bge.render.getWindowHeight()
-        refreshSize = True
+        refreshSize = False
 
-        if self.savedDisplaySize[0] != width:
+        if self.saved_disp_size[0] != width:
             refreshSize = True
-        elif self.savedDisplaySize[1] != height:
+        elif self.saved_disp_size[1] != height:
             refreshSize = True
 
         if refreshSize:
-            self.savedDisplaySize = width, height
-            self.io.display_size = self.savedDisplaySize[0], self.savedDisplaySize[1]
+            self.saved_disp_size = width, height
+            self.io.display_size = width, height
 
-    def updateIO(self):
-        io = imgui.get_io()
-        # Run functions to execute once every game frame
-        self.updateScreenSize()
+    def update_io(self):
+        io = self.io
 
+        self.update_screen_size()
+
+        # Only accept user input if this flag true
         if self.accept_input:
-            self.updateMousePos(io)
-            self.updateMouse(io)
-            self.updateKeyboard(io)
+            self.update_mouse_pos(io)
+            self.update_mouse_btns(io)
+            self.update_keyboard(io)
 
-    def updateMousePos(self, io):
+    def update_mouse_pos(self, io: imgui.IO):
         mouse = self.mouse
-        pos = ((mouse.position[0] * self.io.display_size[0]),
-               (mouse.position[1] * self.io.display_size[1]))
+        x, y = ((mouse.position[0] * self.io.display_size[0]),
+                (mouse.position[1] * self.io.display_size[1]))
 
-        io.mouse_pos = pos
-        self.cursorRenderer.updateCursorInfo(self.savedDisplaySize[1], pos)
+        io.add_mouse_pos_event(x, y)
+        self.cursor_renderer.update_position(x, y)
 
-    def updateMouse(self, io: imgui.IO):
+    def update_mouse_btns(self, io: imgui.IO):
         mouse = self.mouse
 
-        activeMouseButtons = mouse.activeInputs
+        active_btns = mouse.activeInputs
 
-        if bge.events.LEFTMOUSE in activeMouseButtons:
-            io.mouse_down[0] = 1
-        else:
-            io.mouse_down[0] = 0
+        io.add_mouse_button_event(0, bge.events.LEFTMOUSE in active_btns)
+        io.add_mouse_button_event(1, bge.events.RIGHTMOUSE in active_btns)
 
-        if bge.events.RIGHTMOUSE in activeMouseButtons:
-            io.mouse_down[1] = 1
-        else:
-            io.mouse_down[1] = 0
+        io.add_mouse_button_event(2, bge.events.MIDDLEMOUSE in active_btns)
 
-        if bge.events.MIDDLEMOUSE in activeMouseButtons:
-            io.mouse_down[2] = 1
+        if bge.events.WHEELUPMOUSE in active_btns:
+            io.add_mouse_wheel_event(0, 0.5)
+        elif bge.events.WHEELDOWNMOUSE in active_btns:
+            io.add_mouse_wheel_event(0, -0.5)
         else:
-            io.mouse_down[2] = 0
-
-        if bge.events.WHEELUPMOUSE in activeMouseButtons:
-            io.mouse_wheel = .5
-        elif bge.events.WHEELDOWNMOUSE in activeMouseButtons:
-            io.mouse_wheel = -.5
-        else:
-            io.mouse_wheel = 0
+            io.add_mouse_wheel_event(0, 0)
 
         if self.useDeltaTime:
             # Update deltatime in range, may not be necessary
             io.delta_time = bge.logic.deltaTime()
 
-    def updateKeyboard(self, io: imgui.IO):
+    def update_keyboard(self, io: imgui.IO):
         keyboard = self.keyboard
-        keyMap = BGE_KEY_EVENT_MAP
+        active_keys = keyboard.activeInputs
 
-        for key, event in keyboard.inputs.items():
-            if key in keyMap:
-                io.add_key_event(keyMap[key], event.active)
-                # if event.active:
-                #     io.keys_down[key] = True
-                # else:
-                #     io.keys_down[key] = False
+        for key, event in self.key_map.items():
+            io.add_key_event(event, key in active_keys)
 
-        activeKeys = keyboard.activeInputs
+        for key, event in self.modifier_map.items():
+            io.add_key_event(event, key in active_keys)
 
-        io.key_ctrl = (bge.events.LEFTCTRLKEY in activeKeys) or (
-            bge.events.RIGHTCTRLKEY in activeKeys)
-        io.key_alt = (bge.events.LEFTALTKEY in activeKeys) or (
-            bge.events.RIGHTALTKEY in activeKeys)
-        io.key_shift = (bge.events.LEFTSHIFTKEY in activeKeys) or (
-            bge.events.RIGHTSHIFTKEY in activeKeys)
-
-        keyboard = self.keyboard
         text = keyboard.text
         for character in text:
             io.add_input_character(ord(character))
 
-    def setScalingFactors(self, font_scaling_factor: int, screen_scaling_factor: int = 1):
-        io = imgui.get_io()
+    def set_scaling_factors(self, font_scaling_factor: int, screen_scaling_factor: int = 1):
+        io = self.io
 
         # Use to make a font bigger than the 1:1 ratio, supposedly fixes issues with
         # high-res displays
@@ -465,8 +455,8 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         scale *= screen_scaling_factor
         io.font_global_scale = scale
 
-    def setMainFont(self, path: str, font_size_in_pixels: int):
-        io = imgui.get_io()
+    def set_main_font(self, path: str, font_size_in_pixels: int):
+        io = self.io
 
         io.fonts.clear()
         self.main_font = io.fonts.add_font_from_file_ttf(
@@ -474,16 +464,16 @@ class BGEImguiRenderer(BGEPipelineRenderer):
 
         self.refresh_font_texture()
 
-    def addExtraFont(self, path: str, font_size_in_pixels: int):
-        io = imgui.get_io()
+    def add_extra_font(self, path: str, font_size_in_pixels: int):
+        io = self.io
         newFont = io.fonts.add_font_from_file_ttf(
             path, self.font_scaling_factor * font_size_in_pixels)
         self.refresh_font_texture()
         return newFont
 
-    def drawCursor(self):
+    def draw_cursor(self):
         if self.show_cursor:
-            self.cursorRenderer.drawCursor()
+            self.cursor_renderer.draw_cursor()
 
 
 def get_rgba_pixels(image: Image.Image):
@@ -498,30 +488,31 @@ def get_rgba_pixels(image: Image.Image):
 class CursorRenderer:
     def __init__(self, scene: KX_Scene) -> None:
         self.scene = scene
-        self.mousePos = (0, 0)
-        self.height = 0
-        self.cursorWidth = 25
-        self.cursorHeight = 25
+        self.x = 0
+        self.y = 0
+
+        self.cursor_width = 25
+        self.cursor_height = 25
         self.cursorDict = {}
 
-    def setCursorSize(self, width: int, height: int):
-        self.cursorWidth = width
-        self.cursorHeight = height
+    def set_size(self, width: int, height: int):
+        self.cursor_width = width
+        self.cursor_height = height
 
-    def updateCursorInfo(self, height, mousePos):
-        self.height = height
-        self.mousePos = mousePos
+    def update_position(self, x: float, y: float):
+        self.x = x
+        self.y = y
 
-    def addCursors(self, filePath=None):
-        if not filePath:
-            filePath = bge.logic.expandPath("//cursors")
+    def add_cursors(self, file_path=None):
+        if not file_path:
+            file_path = bge.logic.expandPath("//cursors")
 
-        cursorList = glob.glob(filePath + '/**/*.png', recursive=True)
+        cursor_list = glob.glob(file_path + '/**/*.png', recursive=True)
 
         self.cursorDict = {}
 
-        for cursorFile in cursorList:
-            path = pathlib.Path(cursorFile)
+        for cursor_file in cursor_list:
+            path = pathlib.Path(cursor_file)
             image = Image.open(path)
             width, height = image.size
             cursorPixels = get_rgba_pixels(image)
@@ -542,17 +533,18 @@ class CursorRenderer:
                 gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_BORDER)
             gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, width,
                             height, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, cursorPixels)
-
+            image.close()
             self.cursorDict[fileWithoutExtension] = texID
 
-    def drawCursor(self):
-        width = self.cursorWidth
-        height = self.cursorHeight
+    def draw_cursor(self):
+        width = self.cursor_width
+        height = self.cursor_height
 
-        x = self.mousePos[0]
-        y = self.mousePos[1]  # + self.height - height
+        x = self.x
+        y = self.y
 
         draw_list = imgui.get_foreground_draw_list()
+
         pos = x, y
         pos2 = (x + width, y + height)
 
