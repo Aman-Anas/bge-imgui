@@ -1,11 +1,12 @@
 from bge.types import SCA_PythonController
 import bge
-from .renderer import BGEImguiRenderer
+
+from .bgimgui.renderer import BGEImguiRenderer
+
 from imgui_bundle import imgui
 
+
 # Simple example script for running imgui without any wrappers (just the BGEImguiRenderer)
-
-
 def startGUI(cont: SCA_PythonController):
     if cont.sensors["tap"].positive:
         own = cont.owner
@@ -14,7 +15,6 @@ def startGUI(cont: SCA_PythonController):
             own.scene, bge.logic.expandPath("//cursors"))
         own["context"] = context
         own["backend"] = imgui_backend
-        own["showW"] = True
 
 
 def runGUI(cont: SCA_PythonController):

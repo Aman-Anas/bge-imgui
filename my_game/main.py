@@ -1,4 +1,4 @@
-from .myGUI import MyCustomGUI
+from .my_gui import MyCustomGUI
 from bge.types import SCA_PythonController
 import bge
 
@@ -6,8 +6,8 @@ import bge
 def startGUI(cont: SCA_PythonController):
     if cont.sensors["tap"].positive:
         own = cont.owner
-        gui = MyCustomGUI(own.scene, bge.logic.expandPath(
-            "//cursors"))  # Initialize the gui
+        # Initialize the gui
+        gui = MyCustomGUI(own.scene, bge.logic.expandPath("//cursors"))
 
 
 def runGUI(cont: SCA_PythonController):
