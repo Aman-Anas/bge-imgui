@@ -221,7 +221,6 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         gl.glBindVertexArray(self._vao_handle)
 
         for commands in draw_data.cmd_lists:
-            idx_buffer_offset = 0
 
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._vbo_handle)
             # todo: check this (sizes)
@@ -261,8 +260,6 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
                     gltype,
                     ctypes.c_void_p(command.idx_offset * imgui.INDEX_SIZE)
                 )
-
-                idx_buffer_offset += command.elem_count * imgui.INDEX_SIZE
 
         # restore modified GL state
         restore_common_gl_state(common_gl_state_tuple)
