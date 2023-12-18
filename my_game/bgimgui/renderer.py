@@ -371,6 +371,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
     def _map_keys(self):
         self.key_map = BGE_KEY_EVENT_MAP.copy()
         self.modifier_map = BGE_MODIFIER_EVENT_MAP.copy()
+        self.active_modifiers = set()
 
     def update_screen_size(self):
         width = bge.render.getWindowWidth()
@@ -389,7 +390,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
     def update_io(self):
         io = self.io
 
-        self.update_screen_size()
+        # self.update_screen_size()
 
         # Only accept user input if this flag true
         if self.accept_input:
@@ -433,11 +434,15 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         for key, event in self.key_map.items():
             io.add_key_event(event, key in active_keys)
 
+        self.active_modifiers.clear()
         for key, event in self.modifier_map.items():
-            io.add_key_event(event, key in active_keys)
+            if event not in self.active_modifiers:
+                io.add_key_event(event, key in active_keys)
+                self.active_modifiers.add(event)
 
         text = keyboard.text
         for character in text:
+            pass
             io.add_input_character(ord(character))
 
     def set_scaling_factors(self, font_scaling_factor: int, screen_scaling_factor: int = 1):
