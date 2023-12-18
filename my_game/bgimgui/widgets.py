@@ -12,14 +12,14 @@ def draw_bounding_rect():
 
 
 class ImageWidget:
-    def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False, imageClass=ImageHelper) -> None:
+    def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, draw_bound_rect=False, ImageClass=ImageHelper) -> None:
         super().__init__()
         if not os.path.isfile(file):
             raise FileNotFoundError(
                 "Could not find file specified at {file} path. Try using bge.logic.expandPath() to get the correct path")
 
-        self.image = imageClass(file)
-        self.drawBoundRect = drawBoundRect
+        self.image = ImageClass(file)
+        self.draw_bound_rect = draw_bound_rect
 
         self.scale = scale
         self.rounding = rounding
@@ -28,19 +28,19 @@ class ImageWidget:
         # Not doing crops or weird ratios because in that case you might as well make an ImageHelper object
         # As it requires extra parameters
 
-    def enableBoundingBox(self):
-        self.drawBoundRect = True
+    def enable_bounding_box(self):
+        self.draw_bound_rect = True
 
-    def disableBoundingBox(self):
-        self.drawBoundRect = False
+    def disable_bounding_box(self):
+        self.draw_bound_rect = False
 
-    def setScale(self, scaleX, scaleY):
+    def set_scale(self, scaleX, scaleY):
         self.scale = (scaleX, scaleY)
 
-    def setFlags(self, flags):
+    def set_flags(self, flags):
         self.flags = flags
 
-    def setRounding(self, rounding):
+    def set_rounding(self, rounding):
         self.rounding = rounding
 
     def draw(self):
@@ -55,23 +55,23 @@ class ImageWidget:
             kwargs["flags"] = self.flags
 
         self.image.render(scaled_width, scaled_height, *args, **kwargs)
-        if self.drawBoundRect:
+        if self.draw_bound_rect:
             draw_bounding_rect()
 
 
 class ForegroundImage(ImageWidget):
     def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False) -> None:
         super().__init__(file, scale, rounding, flags,
-                         drawBoundRect, imageClass=ForegroundImageHelper)
+                         drawBoundRect, ImageClass=ForegroundImageHelper)
         self.window = None
 
-    def setImagePosition(self, x, y):
+    def set_image_position(self, x, y):
         self.image.setImagePosition(x, y)
 
-    def attachToWindow(self, window: GUIWindow):
+    def attach_to_window(self, window: GUIWindow):
         self.window = window
 
-    def detachWindow(self):
+    def detach_window(self):
         self.window = None
 
     def draw(self):
@@ -84,16 +84,16 @@ class ForegroundImage(ImageWidget):
 class BackgroundImage(ImageWidget):
     def __init__(self, file: str, scale=(1, 1), rounding=None, flags=None, drawBoundRect=False) -> None:
         super().__init__(file, scale, rounding, flags,
-                         drawBoundRect, imageClass=BackgroundImageHelper)
+                         drawBoundRect, ImageClass=BackgroundImageHelper)
         self.window = None
 
-    def setImagePosition(self, x, y):
+    def set_image_position(self, x, y):
         self.image.setImagePosition(x, y)
 
-    def attachToWindow(self, window: GUIWindow):
+    def attach_to_window(self, window: GUIWindow):
         self.window = window
 
-    def detachWindow(self):
+    def detach_window(self):
         self.window = None
 
     def draw(self):
@@ -123,7 +123,7 @@ class GUIWindow:
     def hide(self):
         self.show = False
 
-    def drawWindow(self):
+    def draw_window(self):
         if self.show:
             if self.closable:
                 is_expand, self.show = imgui.begin(
@@ -133,8 +133,8 @@ class GUIWindow:
                     self.name, None, flags=self.flags)
 
             if is_expand:
-                self.drawContents()
+                self.draw_contents()
             imgui.end()
 
-    def drawContents(self):
+    def draw_contents(self):
         pass

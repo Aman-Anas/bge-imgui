@@ -51,12 +51,12 @@ class MyCustomGUI(bgimgui.BGEImguiWrapper):
 
         self.randomForegroundImage = widgets.ForegroundImage(
             bge.logic.expandPath("//cursors/arrow.png"), rounding=5)
-        self.randomForegroundImage.setImagePosition(100, 50)
+        self.randomForegroundImage.set_image_position(100, 50)
 
         self.randomBackgroundImage = widgets.BackgroundImage(
             bge.logic.expandPath("//cursors/resize.png"))
-        self.randomBackgroundImage.setImagePosition(500, 500)
-        self.randomBackgroundImage.setScale(0.2, 0.2)
+        self.randomBackgroundImage.set_image_position(500, 500)
+        self.randomBackgroundImage.set_scale(0.2, 0.2)
 
     def draw(self):
         backend = self.backend
@@ -79,9 +79,9 @@ class MyCustomGUI(bgimgui.BGEImguiWrapper):
         # You can also put this function call in a match-case statement to have one GUI
         # with multiple modes (like LoginScreen, ConnectScreen, MainGame, etc)
         # Or even use objects in a finite state machine
-        self.myTextWindow.drawWindow()
+        self.myTextWindow.draw_window()
 
-        self.bar.drawWindow()
+        self.bar.draw_window()
 
         screenWidth, screenHeight = backend.get_screen_size()
 

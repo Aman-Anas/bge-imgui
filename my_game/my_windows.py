@@ -22,13 +22,13 @@ class MyCustomHealthBarWindow(widgets.GUIWindow):
         self.width = width
         self.height = height
 
-    def drawWindow(self):
+    def draw_window(self):
         display_size = self.io.display_size
         imgui.set_next_window_pos(
             (display_size.x * 0, display_size.y * 1), pivot=(0, 1))
-        super().drawWindow()
+        super().draw_window()
 
-    def drawContents(self):
+    def draw_contents(self):
         corrected_hp = mapRange(self.health, self.min, self.max, 0, 1)
         imgui.progress_bar(corrected_hp, (self.width, self.height), self.name)
         imgui.progress_bar(
@@ -48,11 +48,11 @@ class MyTextWindow(widgets.GUIWindow):
     def __init__(self, name: str, io: imgui.IO, closable: bool = True, flags=None) -> None:
         super().__init__(name, io, closable, flags)
 
-    def drawWindow(self):
+    def draw_window(self):
         pass  # Nothing specific
-        super().drawWindow()
+        super().draw_window()
 
-    def drawContents(self):
+    def draw_contents(self):
         imgui.text_colored(imgui.ImColor(1, 0.7, 0.7).value,
                            "Wow! This is a text box. Colored orange.")
         modal = imgui.button("open")
