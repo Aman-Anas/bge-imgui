@@ -340,6 +340,8 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.saved_disp_size = width, height
         self.io.display_size = width, height
 
+        self.io.backend_flags |= imgui.BackendFlags_.has_set_mouse_pos
+
         self.mouse = bge.logic.mouse
         self.keyboard = bge.logic.keyboard
 
@@ -349,6 +351,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
             self.show_cursor = False
         else:
             self.cursor_renderer.add_cursors(cursor_path)
+            self.io.backend_flags |= imgui.BackendFlags_.has_mouse_cursors
             self.show_cursor = True
 
         self.accept_input = True
@@ -400,6 +403,11 @@ class BGEImguiRenderer(BGEPipelineRenderer):
 
     def update_mouse_pos(self, io: imgui.IO):
         mouse = self.mouse
+        if io.want_set_mouse_pos:
+            mouse.position = (io.mouse_pos.x / self.io.display_size.x,
+                              io.mouse_pos.y / self.io.display_size.y)
+            return
+
         x, y = ((mouse.position[0] * self.io.display_size[0]),
                 (mouse.position[1] * self.io.display_size[1]))
 
