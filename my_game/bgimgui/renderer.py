@@ -390,7 +390,7 @@ class BGEImguiRenderer(BGEPipelineRenderer):
     def update_io(self):
         io = self.io
 
-        # self.update_screen_size()
+        self.update_screen_size()
 
         # Only accept user input if this flag true
         if self.accept_input:
