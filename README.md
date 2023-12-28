@@ -3,7 +3,7 @@ Integrate imgui_bundle with the Blender Game Engine (and variants)
 Currently works with RanGE engine, UPBGE 0.2.5, and UPBGE 0.4+.
 
 # Usage
-To use in your game, simply add the bgimgui folder alongside your game blend. 
+To use in your game, simply add the my_game folder alongside your game blend. 
 Not much documentation, but there are some comments in the python scripts
 and some example files to help you.
 
