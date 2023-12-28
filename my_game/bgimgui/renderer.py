@@ -284,7 +284,7 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
 
         if self._font_texture > -1:
             gl.glDeleteTextures([self._font_texture])
-        self.io.fonts.texture_id = 0
+        self.io.fonts.tex_id = 0
         self._font_texture = 0
 
 
