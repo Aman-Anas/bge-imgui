@@ -21,4 +21,5 @@ def stopGUI(cont: SCA_PythonController):
     if cont.sensors["stop"].positive:
         own = cont.owner
         gui: MyCustomGUI = bge.logic.gui
+        gui.shutdown_gui()
         bge.logic.endGame()
