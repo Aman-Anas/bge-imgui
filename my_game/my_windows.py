@@ -1,6 +1,7 @@
 from __future__ import annotations
 from .bgimgui import widgets
 from imgui_bundle import imgui
+import bge
 
 
 def mapRange(value, inMin, inMax, outMin, outMax):
@@ -63,3 +64,97 @@ class MyTextWindow(widgets.GUIWindow):
         if is_expand:
             imgui.text("hi")
             imgui.end_popup()
+
+
+class SettingsWindow(widgets.GUIWindow):
+
+    START_DEBUG = True
+
+    def __init__(self, io: imgui._IO, closable: bool = True, flags=None) -> None:
+        super().__init__("Settings", io, closable, flags)
+
+        self.show_debug = SettingsWindow.START_DEBUG
+
+        self.update_values()
+
+    def update_values(self):
+        self.resolution = [bge.render.getWindowWidth(),
+                           bge.render.getWindowHeight()]
+        self.fullscreen = bge.render.getFullScreen()
+
+        self.max_logic_frame = bge.logic.getMaxLogicFrame()
+        self.logic_tick_rate = bge.logic.getLogicTicRate()
+
+        self.vsync_options = ["VSYNC OFF", "VSYNC ADAPTIVE", "VSYNC ON"]
+        self.vsync_enums = [bge.render.VSYNC_OFF,
+                            bge.render.VSYNC_ADAPTIVE, bge.render.VSYNC_ON]
+
+        self.vsync = bge.render.getVsync()
+        self.vsync_opt_index = self.vsync_enums.index(self.vsync)
+
+    def draw_contents(self):
+        if imgui.begin_tab_bar("SettingsTabs"):
+            general, _ = imgui.begin_tab_item("General")
+            if general:
+                self.general_settings()
+                imgui.end_tab_item()
+
+            other, _ = imgui.begin_tab_item("Other")
+            if other:
+                imgui.text("hi")
+                imgui.end_tab_item()
+
+            imgui.end_tab_bar()
+
+    def general_settings(self):
+        refresh = imgui.button("Refresh settings after window resize")
+
+        imgui.separator()
+
+        max_resolution = bge.render.getDisplayDimensions()
+        imgui.text("Resolution")
+        imgui.text(
+            f"Detected max display resolution: {max_resolution}")
+        _, self.resolution = imgui.input_int2(
+            "##resolution", self.resolution)
+
+        imgui.text("Fullscreen: ")
+        imgui.same_line()
+        _, self.fullscreen = imgui.checkbox("##fullscreen", self.fullscreen)
+
+        imgui.separator()
+
+        imgui.text("Logic Tick Rate (FPS)")
+        _, self.logic_tick_rate = imgui.input_float(
+            "##logicTickRate", self.logic_tick_rate)
+
+        imgui.text("V-Sync setting")
+        _, self.vsync_opt_index = imgui.combo(
+            "##Vsyncsetting", self.vsync_opt_index, self.vsync_options)
+
+        imgui.text("Maximum Logic Frames per second")
+        _, self.max_logic_frame = imgui.input_int(
+            "##maxLogicFrames", self.max_logic_frame)
+
+        imgui.separator()
+
+        imgui.text("Show debug info: ")
+        imgui.same_line()
+        _, self.show_debug = imgui.checkbox("##debugInfo", self.show_debug)
+
+        apply = imgui.button("Apply settings!", (-1, 0))
+
+        if apply:
+            bge.logic.setMaxLogicFrame(self.max_logic_frame)
+            bge.logic.setLogicTicRate(self.logic_tick_rate)
+            bge.render.setFullScreen(self.fullscreen)
+            bge.render.setWindowSize(*self.resolution)
+
+            bge.render.showFramerate(self.show_debug)
+            bge.render.showProfile(self.show_debug)
+            bge.render.showProperties(self.show_debug)
+
+            bge.render.setVsync(self.vsync_enums[self.vsync_opt_index])
+
+        if refresh:
+            self.update_values()
