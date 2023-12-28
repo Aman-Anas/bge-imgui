@@ -6,7 +6,7 @@ from . import bgimgui
 from .bgimgui import widgets
 from imgui_bundle import imgui
 
-from .my_windows import MyCustomHealthBarWindow, MyTextWindow
+from .my_windows import MyCustomHealthBarWindow, MyTextWindow, SettingsWindow
 
 
 class MyCustomGUI(bgimgui.BGEImguiWrapper):
@@ -48,6 +48,7 @@ class MyCustomGUI(bgimgui.BGEImguiWrapper):
         # Alternately, store them in the GUI and just render as necessary (Recommended method)
         self.myTextWindow = MyTextWindow("potato", io)
         self.bar = MyCustomHealthBarWindow("Cool bar", io, 500, 20)
+        self.settings_window = SettingsWindow(io)
 
         self.randomForegroundImage = widgets.ForegroundImage(
             bge.logic.expandPath("//cursors/arrow.png"), rounding=5)
@@ -82,6 +83,8 @@ class MyCustomGUI(bgimgui.BGEImguiWrapper):
         self.myTextWindow.draw_window()
 
         self.bar.draw_window()
+
+        self.settings_window.draw_window()
 
         screenWidth, screenHeight = backend.get_screen_size()
 
