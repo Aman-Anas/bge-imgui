@@ -22,24 +22,10 @@ By default, the BGEImguiWrapper stores the instance of itself in bge.logic.gui t
 
 # Configuration
 In order to set up `imgui_bundle` to work correctly in your game, there are a few steps involved.
-First, install `imgui_bundle` and a few other libraries into the engine's python install.
+First, you'll need to install `imgui_bundle` and a few other libraries into the engine's python install.
 Here's a video guide: https://cdn.discordapp.com/attachments/481036916427325441/1189919082124943360/2023-12-28_08-10-18.mp4
 
-After that, there is currently a bug with using imgui_bundle in the **embedded** player. **Standalone**
-works perfectly fine, however. To fix the embedded bug, you need to edit `__init__.py` located next
-to your game engine .exe's python (for example, `upbge folder /3.6/lib/site-packages/imgui_bundle/__init__.py`)
-
-Then, add a try-catch statement at the top like so
-```py
-try:
-    from imgui_bundle._imgui_bundle import imgui as imgui  # type: ignore
-    from imgui_bundle._imgui_bundle import hello_imgui as hello_imgui
-    # lots of more import stuff in between
-    from imgui_bundle.im_col32 import IM_COL32
-except ImportError:
-    pass
-```
-And that's it! Test out using the example blend files.
+Next, read `simple_gui.py` and `simple.py` to see how to make your own GUI class and run it in-game.
 
 # Contribution
 Simply make a pull request and/or add an issue for any bugs you find, I'm also active on the UPBGE discord as well as blenderartists.org
