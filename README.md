@@ -11,7 +11,7 @@ To make a custom GUI for your game, extend BGEImguiWrapper class and
 override the setup_gui() and draw() methods. 
 An example is shown in `my_gui.py`, and a usage example in `main.py`.
 
-> If you just want a simple example for how to use imgui_bundle/pyimgui, refer to `example.py`.
+> If you just want a simple example for how to use imgui_bundle/pyimgui, refer to `simple.py`.
 
 For both UPBGE and RanGE, the example's logic bricks look roughly like this:
 
