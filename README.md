@@ -26,7 +26,7 @@ First, install `imgui_bundle` and a few other libraries into the engine's python
 Here's a video guide: https://cdn.discordapp.com/attachments/481036916427325441/1189919082124943360/2023-12-28_08-10-18.mp4
 
 After that, there is currently a bug with using imgui_bundle in the **embedded** player. **Standalone**
-works perfectly fine, however. To fix this bug, you need to edit `__init__.py` located next
+works perfectly fine, however. To fix the embedded bug, you need to edit `__init__.py` located next
 to your game engine .exe's python (for example, `upbge folder /3.6/lib/site-packages/imgui_bundle/__init__.py`)
 
 Then, add a try-catch statement at the top like so
