@@ -7,7 +7,9 @@ import pathlib
 user_package_path = site.getusersitepackages()
 imgui_path = pathlib.Path(f"{user_package_path}/imgui_bundle/__init__.py")
 if not imgui_path.exists():
-    print("imgui_bundle is not installed. Please refer to the bgimgui config instructions.")
+    msg = "imgui_bundle is not installed. Please refer to the bgimgui config instructions."
+    print(msg)
+    raise ImportError(msg)
 
 with open(imgui_path, 'r') as init_file:
     src = init_file.readlines()
