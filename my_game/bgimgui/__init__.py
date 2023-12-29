@@ -15,6 +15,7 @@ with open(imgui_path, 'r') as init_file:
     src = init_file.readlines()
 
 if src[0] != "#BGE_PATCHED\n":
+    print("Patching imgui_bundle for BGE...")
     src.insert(0, "try:\n")
     src.insert(0, "#BGE_PATCHED\n")
     for index, line in enumerate(src):
@@ -28,6 +29,7 @@ if src[0] != "#BGE_PATCHED\n":
 
     with open(imgui_path, 'w+') as init_file:
         init_file.write("".join(src))
+    print("Patch complete!")
 
 # Now that the patch is complete, resume normal imports
 if True:
