@@ -24,17 +24,18 @@ class SimpleCustomGUI(bgimgui.BGEImguiWrapper):
 
         # Make windows like this
         self.my_text_window = MyTextWindow("potato", io)
-        self.hp_bar = MyCustomHealthBarWindow("Cool bar", io, 500, 20)
-        self.settings_window = SettingsWindow(io)
 
     def draw(self):
+        # Make a docking space over the whole screen
+        imgui.dock_space_over_viewport(
+            imgui.get_main_viewport(),
+            imgui.DockNodeFlags_.passthru_central_node  # This flag is so it's transparent
+        )
         # Draw a stored window
         # You can also put this function call in a match-case statement to have one GUI
         # with multiple modes (like LoginScreen, ConnectScreen, MainGame, etc)
         # Or even use objects in a finite state machine
         self.my_text_window.draw_window()
-        self.hp_bar.draw_window()
-        self.settings_window.draw_window()
 
         # Can draw windows procedurally here too (without any wrapper objects for windows)
         imgui.show_demo_window()
