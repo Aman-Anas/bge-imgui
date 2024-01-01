@@ -117,10 +117,10 @@ class GUIWindow:
 
         self.show = True
 
-    def show(self):
+    def unhide_window(self):
         self.show = True
 
-    def hide(self):
+    def hide_window(self):
         self.show = False
 
     def draw_window(self):
