@@ -7,7 +7,7 @@ def startGUI(cont: SCA_PythonController):
     if cont.sensors["tap"].positive:
         own = cont.owner
         # Initialize the gui
-        gui = SimpleCustomGUI(own.scene)
+        bge.logic.gui = SimpleCustomGUI(own.scene)
 
 
 def runGUI(cont: SCA_PythonController):

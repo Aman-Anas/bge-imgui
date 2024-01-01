@@ -1,3 +1,4 @@
+from __future__ import annotations
 from imgui_bundle.python_backends.base_backend import BaseOpenGLRenderer
 from imgui_bundle import imgui
 
@@ -9,9 +10,14 @@ import glob
 import os
 import pathlib
 
-from OpenGL import GL as gl
-from PIL import Image
-import numpy as np
+import OpenGL
+# ENABLE ERROR CHECKING TO DEBUG SHADER ISSUES
+OpenGL.ERROR_CHECKING = False
+
+if True:
+    from OpenGL import GL as gl
+    from PIL import Image
+    import numpy as np
 
 
 class BGEPipelineRenderer(BaseOpenGLRenderer):
@@ -47,7 +53,9 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
     }
     """
 
-    def __init__(self, scene: KX_Scene):
+    def __init__(self, scene: KX_Scene, main=True,
+                 panel: bge.types.KX_GameObject | None = None,
+                 resolution: tuple[int, int] | None = None):
         self._shader_handle = None
         self._vert_handle = None
         self._fragment_handle = None
@@ -64,8 +72,40 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         self._vao_handle = None
         self.data = None
 
+        self.main = main
+        if not main:
+            if panel is None:
+                bge.logic.endGame()
+                raise ValueError(
+                    "Pass a panel game object for non-main UI viewport")
+
+            if resolution is None:
+                bge.logic.endGame()
+                raise ValueError(
+                    "Pass a resolution tuple for non-main UI viewport")
+            self.panel = panel
+            texture = bge.texture.Texture(panel, 0, 0)
+
+            # Initialize the texture
+            data = bge.texture.ImageRender(
+                scene, scene.active_camera, 0, 0, 0)
+            texture.source = data
+
+            # Save the bind ID and resolution for the FBO later
+            self.bind_id = texture.bindId
+            self.tex_resolution = resolution
+            self.fbo_texture = texture
+
         super(BGEPipelineRenderer, self).__init__()
         self.scene.post_draw.append(self.render_call)
+
+        if self.main:
+            width, height = bge.render.getWindowWidth(), bge.render.getWindowHeight()
+        else:
+            width, height = self.tex_resolution
+
+        self.saved_disp_size = width, height
+        self.io.display_size = width, height
 
     def refresh_font_texture(self):
         # save texture state
@@ -107,6 +147,8 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         # save state
         last_texture = gl.glGetIntegerv(gl.GL_TEXTURE_BINDING_2D)
         last_array_buffer = gl.glGetIntegerv(gl.GL_ARRAY_BUFFER_BINDING)
+
+        last_fbo = gl.glGetIntegerv(gl.GL_FRAMEBUFFER_BINDING)
 
         last_vertex_array = gl.glGetIntegerv(gl.GL_VERTEX_ARRAY_BINDING)
 
@@ -158,11 +200,31 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         gl.glVertexAttribPointer(self._attrib_location_color, 4, gl.GL_UNSIGNED_BYTE,
                                  gl.GL_TRUE, imgui.VERTEX_SIZE, ctypes.c_void_p(imgui.VERTEX_BUFFER_COL_OFFSET))
 
+        # If not main render, use the FBO
+        if not self.main:
+            gl.glBindTexture(gl.GL_TEXTURE_2D, self.bind_id)
+
+            width, height = self.tex_resolution
+
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA, width,
+                            height, 0, gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, None)
+            gl.glTexParameteri(
+                gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+            gl.glTexParameteri(
+                gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+
+            self.frame_buffer = gl.glGenFramebuffers(1)
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.frame_buffer)
+
+            gl.glFramebufferTexture2D(
+                gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_TEXTURE_2D, self.bind_id, 0)
+            gl.glDrawBuffer(gl.GL_COLOR_ATTACHMENT0)
+
         # restore state
         gl.glBindTexture(gl.GL_TEXTURE_2D, last_texture)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, last_array_buffer)
         gl.glBindVertexArray(last_vertex_array)
-        pass
+        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, last_fbo)
 
     def render(self, draw_data):
         # Since we are rendering in the post_draw callback, simply update the draw data
@@ -196,6 +258,17 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
             gl.GL_ELEMENT_ARRAY_BUFFER_BINDING)
         last_vertex_array = gl.glGetIntegerv(gl.GL_VERTEX_ARRAY_BINDING)
 
+        last_fbo = gl.glGetIntegerv(gl.GL_FRAMEBUFFER_BINDING)
+
+        if not self.main:
+            gl.glDisable(gl.GL_SCISSOR_TEST)
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.frame_buffer)
+
+            # Clears any color information in the FBO, makes transparent background
+            gl.glClearColor(0.0, 0.0, 0.0, 0.0)
+
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendEquation(gl.GL_FUNC_ADD)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
@@ -218,6 +291,7 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
         gl.glUniform1i(self._attrib_location_tex, 0)
         gl.glUniformMatrix4fv(self._attrib_proj_mtx, 1,
                               gl.GL_FALSE, ortho_projection)
+
         gl.glBindVertexArray(self._vao_handle)
 
         for commands in draw_data.cmd_lists:
@@ -261,9 +335,16 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
                     ctypes.c_void_p(command.idx_offset * imgui.INDEX_SIZE)
                 )
 
+        if not self.main:
+            # If using fbo, then refresh the texture
+            self.fbo_texture.refresh(False)
+            self.panel.worldPosition.x += 0.01
+            self.panel.worldPosition.x -= 0.01
+
+        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, last_fbo)
+
         # restore modified GL state
         restore_common_gl_state(common_gl_state_tuple)
-
         gl.glUseProgram(last_program)
         gl.glActiveTexture(last_active_texture)
         gl.glBindVertexArray(last_vertex_array)
@@ -331,14 +412,19 @@ BGE_MODIFIER_EVENT_MAP = {
 
 
 class BGEImguiRenderer(BGEPipelineRenderer):
-    def __init__(self, scene, cursor_path=None):
+
+    INTERACTION_DIST = 100
+    JUST_RAYCASTED = False
+    CAST_DATA = (None, None, None)
+
+    def __init__(self, scene, cursor_path=None, main=True,
+                 panel: bge.types.KX_GameObject | None = None,
+                 resolution: tuple[int, int] | None = None):
         self.scene = scene
-        super().__init__(scene)
+        super().__init__(scene, main, panel, resolution)
 
-        width, height = bge.render.getWindowWidth(), bge.render.getWindowHeight()
-
-        self.saved_disp_size = width, height
-        self.io.display_size = width, height
+        if panel:
+            self.context_id = int(panel["imgui_panel"])
 
         self.io.backend_flags |= imgui.BackendFlags_.has_set_mouse_pos
 
@@ -377,6 +463,9 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         self.active_modifiers = set()
 
     def update_screen_size(self):
+        if not self.main:
+            return
+
         width = bge.render.getWindowWidth()
         height = bge.render.getWindowHeight()
         refreshSize = False
@@ -395,21 +484,86 @@ class BGEImguiRenderer(BGEPipelineRenderer):
 
         self.update_screen_size()
 
-        # Only accept user input if this flag true
+        # # Only accept user input if this flag true
         if self.accept_input:
             self.update_mouse_pos(io)
             self.update_mouse_btns(io)
             self.update_keyboard(io)
 
+    def camera_raycast(self, camera, mouse):
+        # Weird fix for raycasting from camera
+        parent = None
+        if camera.parent is not None:
+            parent = camera.parent
+            camera.removeParent()
+
+        direction_vec = camera.worldPosition - \
+            camera.getScreenVect(*mouse.position)
+
+        data = camera.rayCast(
+            direction_vec,
+            prop="imgui_panel",
+            dist=BGEImguiRenderer.INTERACTION_DIST
+        )
+
+        if parent:
+            camera.setParent(parent)
+
+        BGEImguiRenderer.JUST_RAYCASTED = True
+        BGEImguiRenderer.CAST_DATA = data
+        return data
+
+    def render_call(self):
+        # Override render call for camera raycast
+        super().render_call()
+        BGEImguiRenderer.JUST_RAYCASTED = False
+
     def update_mouse_pos(self, io: imgui.IO):
         mouse = self.mouse
+
         if io.want_set_mouse_pos:
             mouse.position = (io.mouse_pos.x / self.io.display_size.x,
                               io.mouse_pos.y / self.io.display_size.y)
             return
 
-        x, y = ((mouse.position[0] * self.io.display_size[0]),
-                (mouse.position[1] * self.io.display_size[1]))
+        if self.main:
+            x, y = ((mouse.position[0] * self.io.display_size[0]),
+                    (mouse.position[1] * self.io.display_size[1]))
+        else:
+
+            # This is to ensure with multiple panels, you only raycast once
+            # per frame. Might not be worth the performance increase though,
+            # need to test more.
+            if BGEImguiRenderer.JUST_RAYCASTED:
+                hit_obj, point, _ = BGEImguiRenderer.CAST_DATA
+
+            else:
+                hit_obj, point, _ = self.camera_raycast(
+                    self.scene.active_camera, mouse)
+
+            if hit_obj and (hit_obj["imgui_panel"] == self.context_id):
+                hit_obj: bge.types.KX_GameObject
+
+                scale = hit_obj.localScale
+
+                dist, _, mouse_vec = hit_obj.getVectTo(point)
+                mouse_vec.magnitude *= dist
+                # Adjust scaling
+                mouse_vec.x /= scale.x
+                mouse_vec.y /= scale.y
+                # Reverse Y direction
+                mouse_vec.y *= -1
+                # Correct Translation
+                mouse_vec.x += 1
+                mouse_vec.y += 1
+                mouse_vec.x /= 2
+                mouse_vec.y /= 2
+
+                x, y = ((mouse_vec.x * self.io.display_size[0]),
+                        (mouse_vec.y * self.io.display_size[1]))
+
+            else:
+                x, y = -imgui.FLT_MAX, -imgui.FLT_MAX
 
         io.add_mouse_pos_event(x, y)
         self.cursor_renderer.update_position(x, y)
@@ -450,7 +604,6 @@ class BGEImguiRenderer(BGEPipelineRenderer):
 
         text = keyboard.text
         for character in text:
-            pass
             io.add_input_character(ord(character))
 
     def set_scaling_factors(self, font_scaling_factor: int, screen_scaling_factor: int = 1):

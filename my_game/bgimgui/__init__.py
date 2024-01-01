@@ -34,5 +34,6 @@ if src[0] != "#BGE_PATCHED\n":
 # Now that the patch is complete, resume normal imports
 if True:
     from .imgui_wrapper import BGEImguiWrapper
+    from .renderer import BGEImguiRenderer
     from .image import *
     from .gui_style import *
