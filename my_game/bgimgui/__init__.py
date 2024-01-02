@@ -1,10 +1,13 @@
-import site
+import os
+import sys
 import pathlib
+import numpy as np
 
 # What follows is an incredibly cursed workaround for a bug when importing imgui_bundle
 # via the embedded player multiple times.
 
-user_package_path = site.getusersitepackages()
+user_package_path = os.path.join(sys.prefix, 'lib', 'site-packages')
+
 imgui_path = pathlib.Path(f"{user_package_path}/imgui_bundle/__init__.py")
 if not imgui_path.exists():
     msg = "imgui_bundle is not installed. Please refer to the bgimgui config instructions."
