@@ -87,14 +87,17 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
             texture = bge.texture.Texture(panel, 0, 0)
 
             # Initialize the texture
-            data = bge.texture.ImageRender(
-                scene, scene.active_camera, 0, 0, 0)
+            data = bge.texture.ImageViewport()
+            data.capsize = [resolution[0], resolution[1]]
             texture.source = data
 
             # Save the bind ID and resolution for the FBO later
             self.bind_id = texture.bindId
             self.tex_resolution = resolution
             self.fbo_texture = texture
+
+            # Refresh texture once to apply changes
+            self.fbo_texture.refresh(False)
 
         super(BGEPipelineRenderer, self).__init__()
         self.scene.post_draw.append(self.render_call)
@@ -336,8 +339,7 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
                 )
 
         if not self.main:
-            # If using fbo, then refresh the texture
-            self.fbo_texture.refresh(False)
+            # Fix for UPBGE depsgraph
             self.panel.worldPosition.x += 0.01
             self.panel.worldPosition.x -= 0.01
 
