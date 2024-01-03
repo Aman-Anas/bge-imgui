@@ -1,7 +1,4 @@
 from __future__ import annotations
-from imgui_bundle.python_backends.base_backend import BaseOpenGLRenderer
-from imgui_bundle import imgui
-
 from bge.types import KX_Scene
 import bge.logic
 
@@ -18,6 +15,9 @@ if True:
     from OpenGL import GL as gl
     from PIL import Image
     import numpy as np
+
+    from imgui_bundle.python_backends.base_backend import BaseOpenGLRenderer
+    from imgui_bundle import imgui
 
 
 class BGEPipelineRenderer(BaseOpenGLRenderer):
