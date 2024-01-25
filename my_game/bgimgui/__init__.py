@@ -8,6 +8,9 @@ from . import import_fix
 
 user_package_path = os.path.join(sys.prefix, 'lib', 'site-packages')
 
+# Ensure the packages from range site-packages are installed first priority
+sys.path.insert(0, user_package_path)
+
 imgui_path = pathlib.Path(f"{user_package_path}/imgui_bundle/__init__.py")
 if not imgui_path.exists():
     msg = "imgui_bundle is not installed. Please refer to the bgimgui config instructions."
