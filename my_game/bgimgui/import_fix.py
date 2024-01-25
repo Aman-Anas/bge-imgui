@@ -21,7 +21,7 @@ try:
     from imgui_bundle import immapp as immapp
     from imgui_bundle.immapp import icons_fontawesome as icons_fontawesome
 
-except (ImportError, ModuleNotFound):
+except (ImportError, ModuleNotFoundError):
     pass
 
 # if matplotlib is not installed, we can't import imgui_fig
