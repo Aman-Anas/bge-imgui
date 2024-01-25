@@ -1,6 +1,6 @@
 data = """#BGE_PATCHED_2
-# Part of ImGui Bundle - MIT License - Copyright (c) 2022-2023 Pascal Thomet - https://github.com/pthom/imgui_bundle
 try:
+    # Part of ImGui Bundle - MIT License - Copyright (c) 2022-2023 Pascal Thomet - https://github.com/pthom/imgui_bundle
     from imgui_bundle._imgui_bundle import imgui as imgui  # type: ignore
     from imgui_bundle._imgui_bundle import hello_imgui as hello_imgui
     from imgui_bundle._imgui_bundle import implot as implot
@@ -21,37 +21,33 @@ try:
     from imgui_bundle import immapp as immapp
     from imgui_bundle.immapp import icons_fontawesome as icons_fontawesome
 
+    # if matplotlib is not installed, we can't import imgui_fig
+    try:
+        from imgui_bundle import imgui_fig as imgui_fig
+    except ImportError:
+        pass
+
+    from imgui_bundle._imgui_bundle import __version__, compilation_time
+
+    from imgui_bundle._imgui_bundle.imgui import ImVec2, ImVec4, ImColor, FLT_MIN, FLT_MAX  # type: ignore
+    from imgui_bundle.im_col32 import IM_COL32
+
+    from imgui_bundle import imgui_ctx as imgui_ctx
+
+    # Glfw setup:
+    # By importing imgui_bundle.glfw_utils, we make sure that glfw provided by pip will use our glfw dynamic library.
+    # (imgui_bundle.glfw_utils will call _set_glfw_pip_search_path automatically)
+    from imgui_bundle._glfw_set_search_path import _glfw_set_search_path
+
+    _glfw_set_search_path()
+    from imgui_bundle import glfw_utils as glfw_utils  # noqa: E402
+
+    import os  # noqa: E402
+
+    THIS_DIR = os.path.dirname(__file__)
+    hello_imgui.override_assets_folder(THIS_DIR + "/assets")
 except (ImportError, ModuleNotFoundError):
     pass
-
-# if matplotlib is not installed, we can't import imgui_fig
-try:
-    from imgui_bundle import imgui_fig as imgui_fig
-except ImportError:
-    pass
-
-from imgui_bundle._imgui_bundle import __version__, compilation_time
-
-from imgui_bundle._imgui_bundle.imgui import ImVec2, ImVec4, ImColor, FLT_MIN, FLT_MAX  # type: ignore
-    
-from imgui_bundle.im_col32 import IM_COL32
-
-from imgui_bundle import imgui_ctx as imgui_ctx
-    
-# Glfw setup:
-# By importing imgui_bundle.glfw_utils, we make sure that glfw provided by pip will use our glfw dynamic library.
-# (imgui_bundle.glfw_utils will call _set_glfw_pip_search_path automatically)
-from imgui_bundle._glfw_set_search_path import _glfw_set_search_path
-
-_glfw_set_search_path()
-from imgui_bundle import glfw_utils as glfw_utils  # noqa: E402
-
-
-import os  # noqa: E402
-
-THIS_DIR = os.path.dirname(__file__)
-hello_imgui.override_assets_folder(THIS_DIR + "/assets")
-
 
 __all__ = [
     # submodules

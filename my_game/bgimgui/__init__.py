@@ -2,7 +2,6 @@ import os
 import sys
 import pathlib
 import numpy as np
-from . import import_fix
 # What follows is an incredibly cursed workaround for a bug when importing imgui_bundle
 # via the embedded player multiple times.
 
@@ -21,6 +20,7 @@ with open(imgui_path, 'r') as init_file:
     src = init_file.readlines()
 
 if src[0] != "#BGE_PATCHED_2\n":
+    from . import import_fix
     print("Patching imgui_bundle for BGE...")
     with open(imgui_path, 'w+') as init_file:
         init_file.write(import_fix.data)

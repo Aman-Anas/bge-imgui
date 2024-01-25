@@ -8,8 +8,10 @@ def startGUI(cont: SCA_PythonController):
     if cont.sensors["tap"].positive:
         own = cont.owner
         # Initialize the gui
-        own["gui"] = SimpleCustomGUI(
-            own.scene, main=False, panel=own, resolution=(400, 400))
+        own["gui"] = SimpleCustomGUI(own.scene,
+                                     main=False,
+                                     panel=own,
+                                     resolution=(400, 400))
 
         # This is how you would change the global panel interaction distance
         # bgimgui.BGEImguiRenderer.INTERACTION_DIST = 3
