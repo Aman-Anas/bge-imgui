@@ -620,19 +620,19 @@ class BGEImguiRenderer(BGEPipelineRenderer):
         scale *= screen_scaling_factor
         io.font_global_scale = scale
 
-    def set_main_font(self, path: str, font_size_in_pixels: int):
+    def set_main_font(self, path: str, font_size_in_pixels: int, *args, **kwargs):
         io = self.io
 
         io.fonts.clear()
         self.main_font = io.fonts.add_font_from_file_ttf(
-            path, self.font_scaling_factor * font_size_in_pixels)
+            path, self.font_scaling_factor * font_size_in_pixels, *args, **kwargs)
 
         self.refresh_font_texture()
 
-    def add_extra_font(self, path: str, font_size_in_pixels: int):
+    def add_extra_font(self, path: str, font_size_in_pixels: int, *args, **kwargs):
         io = self.io
         newFont = io.fonts.add_font_from_file_ttf(
-            path, self.font_scaling_factor * font_size_in_pixels)
+            path, self.font_scaling_factor * font_size_in_pixels, *args, **kwargs)
         self.refresh_font_texture()
         return newFont
 
