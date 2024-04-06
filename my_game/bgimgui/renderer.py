@@ -87,8 +87,13 @@ class BGEPipelineRenderer(BaseOpenGLRenderer):
             texture = bge.texture.Texture(panel, 0, 0)
 
             # Initialize the texture
-            data = bge.texture.ImageViewport()
-            data.capsize = [resolution[0], resolution[1]]
+            # Old (bad?) way of making the texture.
+            # I don't think this makes any sense now that I understand opengl more
+            # data = bge.texture.ImageViewport()
+            # data.capsize = [resolution[0], resolution[1]]
+
+            # This is the more correct way. Not sure if the scale param should be set though.
+            data = bge.texture.ImageBuff(resolution[0], resolution[1])
             texture.source = data
 
             # Save the bind ID and resolution for the FBO later
