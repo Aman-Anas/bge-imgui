@@ -1,6 +1,6 @@
 ## ⚠ NOTE FOR UPBGE USERS: If you are using the new Eevee-next renderer, in-game texture UI elements are not supported because the `bge.texture` module is broken. ⚠
 The new `gpu` module is the alternative, however it is feature-incomplete and lacks working documentation for rendering to textures. If you can find better documentation, please let me
-know and I can add a fix.
+know and I can add a fix. **Full-screen UI elements still work fine in Eevee-next AFAIK**
 
 # bge-imgui
 Integrate imgui_bundle with the Blender Game Engine (and variants)
