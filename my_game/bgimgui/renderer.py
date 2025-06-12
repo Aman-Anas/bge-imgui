@@ -409,12 +409,12 @@ BGE_KEY_EVENT_MAP = {
 }
 
 BGE_MODIFIER_EVENT_MAP = {
-    bge.events.LEFTCTRLKEY: imgui.Key.im_gui_mod_ctrl,
-    bge.events.RIGHTCTRLKEY: imgui.Key.im_gui_mod_ctrl,
-    bge.events.LEFTALTKEY: imgui.Key.im_gui_mod_alt,
-    bge.events.RIGHTALTKEY: imgui.Key.im_gui_mod_alt,
-    bge.events.LEFTSHIFTKEY: imgui.Key.im_gui_mod_shift,
-    bge.events.RIGHTSHIFTKEY: imgui.Key.im_gui_mod_shift,
+    bge.events.LEFTCTRLKEY: imgui.Key.mod_ctrl,
+    bge.events.RIGHTCTRLKEY: imgui.Key.mod_ctrl,
+    bge.events.LEFTALTKEY: imgui.Key.mod_alt,
+    bge.events.RIGHTALTKEY: imgui.Key.mod_alt,
+    bge.events.LEFTSHIFTKEY: imgui.Key.mod_shift,
+    bge.events.RIGHTSHIFTKEY: imgui.Key.mod_shift,
 }
 
 
