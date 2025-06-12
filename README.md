@@ -7,6 +7,11 @@ To use in your game, simply add the my_game folder alongside your game blend.
 Not much documentation, but there are some comments in the python scripts
 and some example files to help you.
 
+> ⚠ NOTE FOR UPBGE USERS: If you are using the new Eevee-next renderer, in-game texture UI elements are not supported because the `bge.texture` module is broken. ⚠
+> The new `gpu` module is the alternative, however it is feature-incomplete and lacks working documentation for rendering to textures. If you can find better documentation, please let me
+> know and I can add a fix. **Full-screen UI elements still work fine in Eevee-next AFAIK**
+
+
 To make a custom GUI for your game, extend BGEImguiWrapper class and 
 override the setup_gui() and draw() methods. 
 An example is shown in `my_gui.py`, and a usage example in `main.py`.
